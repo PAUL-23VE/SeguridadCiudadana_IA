@@ -8,7 +8,7 @@ import numpy as np
 from ..algoritmos.difuso import clasificar_difuso, describir_membresia, graficar_membresia, TIPO_MEMBRESIA
 from ..algoritmos.genetico import optimizar_pesos
 from ..algoritmos.reglas import obtener_regla_explicativa
-from ..algoritmos.algoritmos import analizar_conectividad_zona
+from ..algoritmos.conectividad import analizar_conectividad_zona
 
 
 def _nombre_zona(fila, col, grid_shape=None, grid=None):

@@ -1,14 +1,50 @@
 """
-Paquete algoritmos - Algoritmos de IA para diagnóstico
+Paquete algoritmos - Algoritmos de IA para diagnóstico de seguridad ciudadana
+
+Módulos:
+--------
+- busqueda: Algoritmos de búsqueda en grafos (BFS, DFS, A*)
+- conectividad: Análisis de conectividad urbana
+- difuso: Lógica difusa para clasificación de riesgo
+- genetico: Algoritmo genético para optimización de pesos
+- reglas: Minería de reglas (Apriori, PRISM)
 """
-from .algoritmos import bfs, dfs, astar, analizar_conectividad_zona
-from .genetico import optimizar_pesos
-from .reglas import reglas_apriori, reglas_prism, obtener_regla_explicativa
-from .difuso import clasificar_difuso, mantener_graficas_abiertas
+
+# Algoritmos de búsqueda en grafos
+from .busqueda import bfs, dfs, astar, calcular_distancia_haversine, heuristica_haversine
+
+# Análisis de conectividad urbana
+from .conectividad import analizar_conectividad_zona
+
+# Algoritmo genético para optimización
+from .genetico import optimizar_pesos, calcular_fitness, crear_individuo
+
+# Minería de reglas
+from .reglas import (
+    reglas_apriori, 
+    reglas_prism, 
+    obtener_regla_explicativa,
+    discretizar_valor,
+    apriori
+)
+
+# Lógica difusa
+from .difuso import (
+    clasificar_difuso, 
+    mantener_graficas_abiertas,
+    graficar_membresia,
+    describir_membresia
+)
 
 __all__ = [
-    'bfs', 'dfs', 'astar', 'analizar_conectividad_zona',
-    'optimizar_pesos',
-    'reglas_apriori', 'reglas_prism', 'obtener_regla_explicativa',
-    'clasificar_difuso', 'mantener_graficas_abiertas'
+    # Búsqueda
+    'bfs', 'dfs', 'astar', 'calcular_distancia_haversine', 'heuristica_haversine',
+    # Conectividad
+    'analizar_conectividad_zona',
+    # Genético
+    'optimizar_pesos', 'calcular_fitness', 'crear_individuo',
+    # Reglas
+    'reglas_apriori', 'reglas_prism', 'obtener_regla_explicativa', 'discretizar_valor', 'apriori',
+    # Difuso
+    'clasificar_difuso', 'mantener_graficas_abiertas', 'graficar_membresia', 'describir_membresia'
 ]
