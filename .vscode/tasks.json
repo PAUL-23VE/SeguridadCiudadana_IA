@@ -1,12 +1,24 @@
 {
-    // Configuración de tareas para ejecutar el flujo principal del diagnóstico
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Test Gráficas Matplotlib",
+            "label": "Ejecutar Sistema de Seguridad",
             "type": "shell",
-            "command": "python test_graficas_simple.py",
-            "group": "test",
+            "command": "python main.py",
+            "group": "build",
+            "isBackground": false,
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Instalar Dependencias",
+            "type": "shell",
+            "command": "pip install -r requirements.txt",
+            "group": "build",
             "isBackground": false,
             "problemMatcher": []
         }

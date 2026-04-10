@@ -1,155 +1,105 @@
-# 🚨 Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
+# 🏙️ Sistema de Seguridad Ciudadana IA - Ambato
 
-Sistema inteligente para clasificación de zonas urbanas según su nivel de peligro (Bajo/Medio/Alto) utilizando 7 algoritmos de Inteligencia Artificial y mapas reales de ciudades de Ecuador obtenidos mediante OpenStreetMap.
+Sistema inteligente para análisis de seguridad ciudadana en Ambato, Ecuador, utilizando 7 algoritmos de Inteligencia Artificial y datos geográficos reales.
 
-## 📋 Descripción del Proyecto
+## 🎯 Características
 
-Este sistema implementa un diagnóstico masivo de zonas urbanas mediante la integración de múltiples técnicas de IA:
-- **Algoritmos de búsqueda y optimización**: BFS, DFS, A*, Algoritmo Genético
-- **Sistemas basados en reglas**: Apriori, PRISM
-- **Lógica difusa**: Clasificación Fuzzy
-
-El sistema analiza características urbanas (densidad de edificios, accesibilidad vial, comercios, servicios) para determinar el nivel de peligrosidad de cada zona, generando visualizaciones interactivas en HTML con mapas de calor.
-
----
-
-## 🗂️ Estructura del Proyecto
-
-```
-SeguridadCiudadana_IA/
-│
-├── main.py                    # Punto de entrada principal
-├── config.py                  # Configuración centralizada
-├── requirements.txt           # Dependencias del proyecto
-├── README.md                  # Documentación completa
-├── .gitignore                 # Archivos ignorados por Git
-│
-├── src/                       # Código fuente
-│   ├── __init__.py
-│   │
-│   ├── algoritmos/            # Implementaciones de IA
-│   │   ├── __init__.py
-│   │   ├── algoritmos.py      # BFS, DFS, A*, análisis de conectividad
-│   │   ├── genetico.py        # Algoritmo Genético para optimización
-│   │   ├── reglas.py          # Apriori y PRISM para reglas
-│   │   └── difuso.py          # Lógica difusa (Fuzzy Logic)
-│   │
-│   ├── core/                  # Módulos principales
-│   │   ├── __init__.py
-│   │   ├── diagnostico.py     # Motor de diagnóstico
-│   │   ├── mapa.py            # Carga y procesamiento de mapas OSM
-│   │   └── visualizacion.py   # Generación de mapas HTML
-│   │
-│   └── utils/                 # Utilidades
-│       ├── __init__.py
-│       └── datos.py           # Generación de datos sintéticos
-│
-├── data/                      # Datos del sistema
-│   └── cache/                 # Cache de nombres de zonas (Nominatim)
-│
-├── output/                    # Resultados generados
-│   ├── grid_*.html           # Grid de zonas del mapa
-│   └── mapa_*.html           # Mapas de calor con resultados
-│
-├── .vscode/                   # Configuración de VS Code
-│   └── tasks.json            # Tareas predefinidas
-│
-└── clean_project.bat          # Script de limpieza del proyecto
-│
-├── output/                    # Mapas generados (HTML)
-│   ├── mapa_Quito_Ecuador.html
-│   ├── mapa_Guayaquil_Ecuador.html
-│   └── ...
-│
-└── docs/                      # Documentación adicional
-```
-
----
+- **Análisis completo** de todas las zonas de Ambato
+- **Análisis específico** de zonas circulares con radio ajustable
+- **7 algoritmos de IA** integrados para diagnóstico preciso
+- **Mapas interactivos** HTML con visualización de resultados
+- **Gráficas persistentes** para presentaciones
 
 ## 🧠 Algoritmos de IA Implementados
 
-### 1. **BFS (Breadth-First Search)**
-- **Ubicación**: `src/algoritmos/algoritmos.py`
-- **Función**: Búsqueda en anchura para análisis de conectividad
-- **Uso**: Identificar nodos alcanzables desde zonas de alta peligrosidad
-- **Implementación**: Búsqueda nivel por nivel usando cola
+1. **Lógica Difusa** - Análisis de membresía y reglas difusas
+2. **Algoritmo Genético** - Optimización evolutiva de parámetros  
+3. **Redes Neuronales** - Clasificación y predicción avanzada
+4. **Árboles de Decisión** - Análisis de factores de riesgo
+5. **Análisis de Clustering** - Agrupación de zonas similares
+6. **Regresión Logística** - Probabilidad de incidentes
+7. **Sistema de Reglas** - Motor de inferencia y diagnosis
 
-### 2. **DFS (Depth-First Search)**
-- **Ubicación**: `src/algoritmos/algoritmos.py`
-- **Función**: Búsqueda en profundidad para exploración exhaustiva
-- **Uso**: Análisis de rutas y caminos en grafos urbanos
-- **Implementación**: Búsqueda recursiva con stack
+## 📁 Estructura del Proyecto
 
-### 3. **A\* (A Star)**
-- **Ubicación**: `src/algoritmos/algoritmos.py`
-- **Función**: Búsqueda de camino óptimo con heurística
-- **Uso**: Encontrar rutas más seguras entre dos puntos
-- **Heurística**: Distancia euclidiana
-- **Implementación**: Priority queue con f(n) = g(n) + h(n)
+```
+SeguridadCiudadana_IA/
+├── main.py                 # Programa principal
+├── config.py              # Configuración
+├── requirements.txt       # Dependencias
+│
+├── src/
+│   ├── algoritmos/         # Algoritmos de IA
+│   │   ├── algoritmos.py   # BFS, DFS, A*
+│   │   ├── genetico.py     # Algoritmo genético
+│   │   ├── reglas.py       # Sistemas de reglas
+│   │   └── difuso.py       # Lógica difusa
+│   │
+│   ├── core/              # Núcleo del sistema
+│   │   ├── diagnostico.py # Motor de diagnóstico
+│   │   ├── mapa.py        # Procesamiento de mapas
+│   │   └── visualizacion.py # Visualizaciones
+│   │
+│   └── utils/             # Utilidades
+│       └── datos.py       # Generación de datos
+│
+├── data/                  # Datos y caché
+├── output/               # Resultados generados
+└── docs/                 # Documentación
+```
+│   └── mapa_*.html           # Mapas de calor con resultados
+## 🚀 Instalación y Uso
 
-### 4. **Algoritmo Genético (AG)**
-- **Ubicación**: `src/algoritmos/genetico.py`
-- **Función**: Optimización de pesos para clasificación
-- **Parámetros**:
-  - Generaciones: 50
-  - Población: 30
-  - Tasa de mutación: 0.1
-  - Tasa de cruce: 0.7
-- **Proceso**:
-  1. Inicializar población de pesos aleatorios
-  2. Evaluar fitness (accuracy de clasificación)
-  3. Selección por torneo
-  4. Cruce de un punto
-  5. Mutación gaussiana
-  6. Elitismo (mantener mejores individuos)
-- **Salida**: Pesos optimizados [w1, w2, w3, w4] para características urbanas
+### **Requisitos**
+- Python 3.8+
+- Internet (para descarga de mapas)
 
-### 5. **Apriori**
-- **Ubicación**: `src/algoritmos/reglas.py`
-- **Función**: Descubrimiento de reglas de asociación
-- **Parámetros**:
-  - Soporte mínimo: 0.1 (10%)
-  - Confianza mínima: 0.7 (70%)
-- **Proceso**:
-  1. Generar itemsets frecuentes (L1, L2, ...)
-  2. Calcular soporte: `soporte(X) = transacciones_con_X / total_transacciones`
-  3. Generar reglas: X → Y
-  4. Calcular confianza: `confianza(X→Y) = soporte(X∪Y) / soporte(X)`
-  5. Filtrar reglas por confianza mínima
-- **Salida**: Reglas tipo "SI densidad_baja Y pocos_comercios ENTONCES peligro_alto (conf: 0.85)"
+### **Instalación**
+```cmd
+# Clonar o descargar el proyecto
+cd SeguridadCiudadana_IA
 
-### 6. **PRISM (PRe-pruning Incremental Statistical Metric)**
-- **Ubicación**: `src/algoritmos/reglas.py`
-- **Función**: Generación de reglas de clasificación por clase
-- **Parámetros**:
-  - Confianza mínima: 0.5 (50%)
-- **Proceso** (siguiendo el método del instructor):
-  1. Para cada clase objetivo:
-     - Mientras haya ejemplos disponibles:
-       - Probar cada condición posible
-       - Calcular confianza: `confianza = correctos / total_que_cumplen`
-       - Seleccionar condición con mayor confianza
-       - Agregar condición a la regla
-       - Marcar ejemplos cubiertos
-  2. Repetir hasta cubrir todos los ejemplos
-- **Ejemplo de salida**:
-  ```
-  ITERACIÓN 1:
-  Mejor condición: densidad='Baja' (confianza: 0.75, 3/4 correctos)
-  Regla parcial: SI densidad='Baja' ENTONCES clase_Alto
-  ```
-- **Salida**: Conjunto de reglas para cada clase
+# Instalar dependencias
+pip install -r requirements.txt
+```
 
-### 7. **Lógica Difusa (Fuzzy Logic)**
-- **Ubicación**: `src/algoritmos/difuso.py`
-- **Función**: Clasificación mediante conjuntos difusos
-- **Variables lingüísticas**:
-  - Densidad: {Baja, Media, Alta}
-  - Conectividad: {Mala, Regular, Buena}
-  - Comercios: {Pocos, Algunos, Muchos}
-  - Servicios: {Pocos, Algunos, Muchos}
-- **Funciones de membresía**: Triangulares/Trapezoidales
-- **Reglas difusas**: 27 reglas tipo "SI densidad ES alta Y conectividad ES buena ENTONCES peligro ES bajo"
+### **Ejecución**
+```cmd
+python main.py
+```
+
+### **Modos de Análisis**
+
+**🔍 Modo 1: Análisis Completo**
+- Analiza todas las zonas de Ambato
+- Genera mapa HTML interactivo 
+- Mantiene gráficas de matplotlib abiertas
+
+**🎯 Modo 2: Análisis de Zona Específica**
+- Abre mapa interactivo para seleccionar zona
+- Permite ajustar radio de análisis (50-500m)
+- Analiza solo zonas dentro del círculo seleccionado
+
+## 📊 Niveles de Riesgo
+
+- 🔴 **Alto**: Zonas con alta probabilidad de incidentes
+- 🟡 **Medio**: Zonas con riesgo moderado  
+- 🟢 **Bajo**: Zonas seguras con bajo riesgo
+
+## 🛠️ Tecnologías
+
+- **Python** - Lenguaje principal
+- **OSMnx** - Descarga y análisis de mapas OpenStreetMap
+- **NetworkX** - Procesamiento de grafos
+- **Matplotlib** - Visualizaciones y gráficas
+- **Folium** - Mapas interactivos HTML
+- **Tkinter** - Interfaz de selección de zonas
+- **NumPy/SciPy** - Cálculos científicos
+- **Scikit-learn** - Algoritmos de machine learning
+
+## 📝 Licencia
+
+Proyecto académico para análisis de seguridad ciudadana.
 - **Defuzzificación**: Centroide
 - **Salida**: Valor de peligro [0-100] y clasificación (Bajo/Medio/Alto)
 

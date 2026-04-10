@@ -14,13 +14,18 @@ Este sistema utiliza 7 algoritmos de IA para clasificar zonas urbanas:
 import sys
 import os
 import folium
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+
 from config import GRID_SIZE, OUTPUT_DIR, COLORES_RIESGO
 
 # Importar módulos del sistema
 try:
     from src.core import cargar_mapa, construir_grid, diagnostico_masivo
-    from src.core.diagnostico import diagnosticar_zona  # Para análisis individual
-    from src.algoritmos.difuso import mantener_graficas_abiertas  # Para mantener gráficas
+    from src.core.diagnostico import diagnosticar_zona
+    from src.algoritmos import difuso as _modulo_difuso
+    from src.algoritmos.difuso import mantener_graficas_abiertas
 except ImportError as e:
     print(f"❌ Error al importar módulos: {e}")
     print("   Verifica que la estructura del proyecto esté correcta.")
@@ -37,19 +42,9 @@ def mostrar_banner():
     print("="*70 + "\n")
 
 
-def solicitar_ciudad():
-    """Solicita al usuario la ciudad a analizar."""
-    ciudades = ["Quito", "Guayaquil", "Cuenca", "Ambato", "Riobamba", "Loja"]
-    print("  Ciudades: " + " | ".join(ciudades))
-    ciudad = input("\n  Ciudad a analizar: ").strip()
-    
-    if not ciudad:
-        ciudad = "Ambato"  # Por defecto Ambato (UTA)
-    
-    if "Ecuador" not in ciudad and "ecuador" not in ciudad:
-        ciudad = f"{ciudad}, Ecuador"
-    
-    return ciudad
+def obtener_ciudad_ambato():
+    """Retorna directamente la ciudad de Ambato para el análisis."""
+    return "Ambato, Ecuador"
 
 
 def solicitar_modo_analisis():
@@ -59,7 +54,7 @@ def solicitar_modo_analisis():
     print("  1️⃣  Análisis completo (todas las zonas)")
     print("  2️⃣  Análisis de zona específica (diagnóstico detallado)")
     print("  ─" * 35)
-    
+
     opcion = input("\n  Selecciona opción (1/2): ").strip()
     return opcion if opcion in ['1', '2'] else '1'
 
@@ -67,37 +62,31 @@ def solicitar_modo_analisis():
 def generar_mapa_grid(G, grid, grid_size, ciudad):
     """Genera un mapa HTML interactivo con círculo movible y slider de zoom."""
     filas, columnas = grid_size
-    
-    # Obtener centro del mapa y límites
+
     nodos = list(G.nodes(data=True))
     if not nodos:
         return None
-    
+
     lats = [data['y'] for _, data in nodos]
     lons = [data['x'] for _, data in nodos]
     centro_lat = sum(lats) / len(lats)
     centro_lon = sum(lons) / len(lons)
-    
-    # Calcular límites del grid
+
     north = max(grid[i, j]['lat'] for i in range(filas) for j in range(columnas))
     south = min(grid[i, j]['lat'] for i in range(filas) for j in range(columnas))
-    east = max(grid[i, j]['lon'] for i in range(filas) for j in range(columnas))
-    west = min(grid[i, j]['lon'] for i in range(filas) for j in range(columnas))
-    
-    # Crear datos del grid en formato JSON para JavaScript
+    east  = max(grid[i, j]['lon'] for i in range(filas) for j in range(columnas))
+    west  = min(grid[i, j]['lon'] for i in range(filas) for j in range(columnas))
+
     import json
     grid_data = []
     for i in range(filas):
         for j in range(columnas):
             zona = grid[i, j]
             grid_data.append({
-                'fila': i,
-                'columna': j,
-                'lat': zona['lat'],
-                'lon': zona['lon']
+                'fila': i, 'columna': j,
+                'lat': zona['lat'], 'lon': zona['lon']
             })
-    
-    # Crear HTML con mapa interactivo
+
     html_content = f"""
 <!DOCTYPE html>
 <html>
@@ -108,111 +97,38 @@ def generar_mapa_grid(G, grid, grid_size, ciudad):
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }}
-        #map {{
-            position: absolute;
-            top: 0;
-            bottom: 120px;
-            left: 0;
-            right: 0;
-        }}
+        body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
+        #map {{ position: absolute; top: 0; bottom: 120px; left: 0; right: 0; }}
         #controls {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 120px;
-            background: white;
-            border-top: 2px solid #2196F3;
-            padding: 15px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+            background: white; border-top: 2px solid #2196F3;
+            padding: 15px; box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }}
         #info {{
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            min-width: 200px;
+            position: absolute; top: 10px; right: 10px; background: white;
+            padding: 15px; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1000; min-width: 200px;
         }}
-        .slider-container {{
-            margin: 10px 0;
-        }}
-        .slider-label {{
-            display: inline-block;
-            width: 150px;
-            font-weight: bold;
-            color: #333;
-        }}
-        input[type="range"] {{
-            width: 300px;
-            vertical-align: middle;
-        }}
-        .value-display {{
-            display: inline-block;
-            width: 60px;
-            text-align: right;
-            font-weight: bold;
-            color: #2196F3;
-        }}
+        .slider-container {{ margin: 10px 0; }}
+        .slider-label {{ display: inline-block; width: 150px; font-weight: bold; color: #333; }}
+        input[type="range"] {{ width: 300px; vertical-align: middle; }}
+        .value-display {{ display: inline-block; width: 60px; text-align: right; font-weight: bold; color: #2196F3; }}
         button {{
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            font-weight: bold;
+            background: #4CAF50; color: white; border: none; padding: 12px 30px;
+            font-size: 16px; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: bold;
         }}
-        button:hover {{
-            background: #45a049;
-        }}
-        .info-item {{
-            margin: 8px 0;
-            font-size: 14px;
-        }}
-        .info-label {{
-            font-weight: bold;
-            color: #666;
-        }}
-        .info-value {{
-            color: #2196F3;
-            font-weight: bold;
-            font-size: 16px;
-        }}
+        button:hover {{ background: #45a049; }}
+        .info-item {{ margin: 8px 0; font-size: 14px; }}
+        .info-label {{ font-weight: bold; color: #666; }}
+        .info-value {{ color: #2196F3; font-weight: bold; font-size: 16px; }}
         #instructions {{
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            z-index: 1000;
-            max-width: 300px;
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255,255,255,0.95); padding: 15px; border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px;
         }}
-        #instructions h3 {{
-            margin: 0 0 10px 0;
-            color: #2196F3;
-            font-size: 16px;
-        }}
-        #instructions ul {{
-            margin: 5px 0;
-            padding-left: 20px;
-        }}
-        #instructions li {{
-            margin: 5px 0;
-            font-size: 13px;
-        }}
+        #instructions h3 {{ margin: 0 0 10px 0; color: #2196F3; font-size: 16px; }}
+        #instructions ul {{ margin: 5px 0; padding-left: 20px; }}
+        #instructions li {{ margin: 5px 0; font-size: 13px; }}
     </style>
 </head>
 <body>
@@ -225,24 +141,12 @@ def generar_mapa_grid(G, grid, grid_size, ciudad):
             <li>✅ <b>Confirma</b> cuando estés listo</li>
         </ul>
     </div>
-    
     <div id="info">
-        <div class="info-item">
-            <span class="info-label">Zona:</span>
-            <span class="info-value" id="zona-coords">[?,?]</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Lat:</span>
-            <span class="info-value" id="lat-display">-</span>
-        </div>
-        <div class="info-item">
-            <span class="info-label">Lon:</span>
-            <span class="info-value" id="lon-display">-</span>
-        </div>
+        <div class="info-item"><span class="info-label">Zona:</span><span class="info-value" id="zona-coords">[?,?]</span></div>
+        <div class="info-item"><span class="info-label">Lat:</span><span class="info-value" id="lat-display">-</span></div>
+        <div class="info-item"><span class="info-label">Lon:</span><span class="info-value" id="lon-display">-</span></div>
     </div>
-    
     <div id="map"></div>
-    
     <div id="controls">
         <div class="slider-container">
             <span class="slider-label">🎯 Tamaño del círculo:</span>
@@ -254,143 +158,85 @@ def generar_mapa_grid(G, grid, grid_size, ciudad):
             <button onclick="resetearCirculo()" style="background: #ff9800;">🔄 Resetear</button>
         </div>
     </div>
-
     <script>
-        // Datos del grid
         const gridData = {json.dumps(grid_data)};
         const gridSize = {json.dumps([filas, columnas])};
         const bounds = [[{south}, {west}], [{north}, {east}]];
-        
-        // Crear mapa
+
         const map = L.map('map').setView([{centro_lat}, {centro_lon}], 13);
-        
-        // Agregar capa de OpenStreetMap
         L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18
+            attribution: '© OpenStreetMap contributors', maxZoom: 18
         }}).addTo(map);
-        
-        // Dibujar grid de zonas (puntos pequeños)
+
         gridData.forEach(zona => {{
             L.circleMarker([zona.lat, zona.lon], {{
-                radius: 2,
-                color: '#999',
-                fillColor: '#ddd',
-                fillOpacity: 0.3,
-                weight: 1
+                radius: 2, color: '#999', fillColor: '#ddd', fillOpacity: 0.3, weight: 1
             }}).addTo(map);
         }});
-        
-        // Círculo de selección
+
         let circle = L.circle([{centro_lat}, {centro_lon}], {{
-            color: '#FF5722',
-            fillColor: '#FF5722',
-            fillOpacity: 0.3,
-            radius: 150,
-            weight: 3
+            color: '#FF5722', fillColor: '#FF5722', fillOpacity: 0.3, radius: 150, weight: 3
         }}).addTo(map);
-        
+
         let selectedZona = null;
-        
-        // Función para encontrar la zona más cercana
+
         function encontrarZonaCercana(lat, lon) {{
-            let minDist = Infinity;
-            let zonaEncontrada = null;
-            
+            let minDist = Infinity, zonaEncontrada = null;
             gridData.forEach(zona => {{
-                const dist = Math.sqrt(
-                    Math.pow(zona.lat - lat, 2) + 
-                    Math.pow(zona.lon - lon, 2)
-                );
-                if (dist < minDist) {{
-                    minDist = dist;
-                    zonaEncontrada = zona;
-                }}
+                const dist = Math.sqrt(Math.pow(zona.lat-lat,2) + Math.pow(zona.lon-lon,2));
+                if (dist < minDist) {{ minDist = dist; zonaEncontrada = zona; }}
             }});
-            
             return zonaEncontrada;
         }}
-        
-        // Actualizar info de la zona
+
         function actualizarInfo(zona) {{
             if (zona) {{
                 selectedZona = zona;
-                document.getElementById('zona-coords').textContent = 
-                    `[${{zona.fila}},${{zona.columna}}]`;
-                document.getElementById('lat-display').textContent = 
-                    zona.lat.toFixed(5);
-                document.getElementById('lon-display').textContent = 
-                    zona.lon.toFixed(5);
+                document.getElementById('zona-coords').textContent = `[${{zona.fila}},${{zona.columna}}]`;
+                document.getElementById('lat-display').textContent = zona.lat.toFixed(5);
+                document.getElementById('lon-display').textContent = zona.lon.toFixed(5);
             }}
         }}
-        
-        // Click en el mapa
+
         map.on('click', function(e) {{
-            const lat = e.latlng.lat;
-            const lon = e.latlng.lng;
-            
-            // Mover círculo
-            circle.setLatLng([lat, lon]);
-            
-            // Encontrar zona más cercana
-            const zona = encontrarZonaCercana(lat, lon);
-            actualizarInfo(zona);
+            circle.setLatLng([e.latlng.lat, e.latlng.lng]);
+            actualizarInfo(encontrarZonaCercana(e.latlng.lat, e.latlng.lng));
         }});
-        
-        // Slider de radio
-        const radiusSlider = document.getElementById('radius-slider');
-        const radiusValue = document.getElementById('radius-value');
-        
-        radiusSlider.addEventListener('input', function() {{
+
+        document.getElementById('radius-slider').addEventListener('input', function() {{
             const radius = parseInt(this.value);
             circle.setRadius(radius);
-            radiusValue.textContent = radius + 'm';
+            document.getElementById('radius-value').textContent = radius + 'm';
         }});
-        
-        // Función para confirmar zona
+
         function confirmarZona() {{
             if (selectedZona) {{
-                // Mostrar coordenadas en alerta grande
-                alert(`✅ ZONA SELECCIONADA\\n\\n` +
-                      `Fila: ${{selectedZona.fila}}\\n` +
-                      `Columna: ${{selectedZona.columna}}\\n\\n` +
-                      `📍 Coordenadas:\\n` +
-                      `Lat: ${{selectedZona.lat.toFixed(5)}}\\n` +
-                      `Lon: ${{selectedZona.lon.toFixed(5)}}\\n\\n` +
-                      `ANOTA ESTOS VALORES:\\n` +
-                      `Fila: ${{selectedZona.fila}}\\n` +
-                      `Columna: ${{selectedZona.columna}}\\n\\n` +
-                      `Ahora vuelve a la consola y escríbelos.`);
+                alert(`✅ ZONA SELECCIONADA\\n\\nFila: ${{selectedZona.fila}}\\nColumna: ${{selectedZona.columna}}\\n\\n📍 Coordenadas:\\nLat: ${{selectedZona.lat.toFixed(5)}}\\nLon: ${{selectedZona.lon.toFixed(5)}}\\n\\nANOTA ESTOS VALORES:\\nFila: ${{selectedZona.fila}}\\nColumna: ${{selectedZona.columna}}\\n\\nAhora vuelve a la consola y escríbelos.`);
             }} else {{
                 alert('Por favor, haz click en el mapa para seleccionar una zona.');
             }}
         }}
-        
-        // Función para resetear
+
         function resetearCirculo() {{
             circle.setLatLng([{centro_lat}, {centro_lon}]);
             circle.setRadius(150);
-            radiusSlider.value = 150;
-            radiusValue.textContent = '150m';
+            document.getElementById('radius-slider').value = 150;
+            document.getElementById('radius-value').textContent = '150m';
             selectedZona = null;
             document.getElementById('zona-coords').textContent = '[?,?]';
             document.getElementById('lat-display').textContent = '-';
             document.getElementById('lon-display').textContent = '-';
         }}
-        
-        // Inicializar con la zona del centro
-        const zonaInicial = encontrarZonaCercana({centro_lat}, {centro_lon});
-        actualizarInfo(zonaInicial);
+
+        actualizarInfo(encontrarZonaCercana({centro_lat}, {centro_lon}));
     </script>
 </body>
 </html>
 """
-    
-    # Guardar mapa interactivo
+
     ruta_mapa = os.path.join(OUTPUT_DIR, f"grid_{ciudad.replace(', ', '_').replace(' ', '_')}.html")
     with open(ruta_mapa, 'w', encoding='utf-8') as f:
         f.write(html_content)
-    
     return ruta_mapa
 
 
@@ -407,7 +253,7 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     except ImportError:
         print("  ⚠️  Instalando tkintermapview...")
         import subprocess
-        subprocess.check_call([__import__('sys').executable, "-m", "pip", "install", "tkintermapview"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "tkintermapview"])
         from tkintermapview import TkinterMapView
 
     filas, columnas = grid_size
@@ -424,13 +270,11 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     centro_lat = sum(lats) / len(lats)
     centro_lon = sum(lons) / len(lons)
 
-    # ── Ventana ───────────────────────────────────────────────────────────────
     ventana = tk.Tk()
     ventana.title(f"Selección de Zona - {ciudad}")
     ventana.geometry("1200x800")
     ventana.configure(bg='#f5f5f5')
 
-    # ── Panel lateral izquierdo ────────────────────────────────────────────────
     panel_izq = tk.Frame(ventana, bg='white', width=300, relief='raised', borderwidth=2)
     panel_izq.pack(side='left', fill='y')
     panel_izq.pack_propagate(False)
@@ -462,7 +306,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
 
     ttk.Separator(panel_izq, orient='horizontal').pack(fill='x', padx=15, pady=8)
 
-    # Slider
     sl_box = tk.Frame(panel_izq, bg='white', pady=8)
     sl_box.pack(fill='x', padx=15)
     tk.Label(sl_box, text="🎯 Radio del círculo:",
@@ -477,7 +320,8 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     tk.Label(sl_lims, text="50m",  font=('Arial', 8), bg='white', fg='#999').pack(side='left')
     tk.Label(sl_lims, text="500m", font=('Arial', 8), bg='white', fg='#999').pack(side='right')
 
-    ttk.Separator(panel_izq, orient='horizontal').pack(fill='x', padx=15, pady=16)    # Instrucciones
+    ttk.Separator(panel_izq, orient='horizontal').pack(fill='x', padx=15, pady=16)
+
     inst_box = tk.Frame(panel_izq, bg='white')
     inst_box.pack(fill='x', padx=15)
     tk.Label(inst_box, text="💡 Cómo usar:",
@@ -491,7 +335,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
 
     ttk.Separator(panel_izq, orient='horizontal').pack(fill='x', padx=15, pady=16)
 
-    # Botón para iniciar análisis (se habilita al hacer click en el mapa)
     btn_iniciar = tk.Button(
         panel_izq,
         text="▶  INICIAR ANÁLISIS",
@@ -504,7 +347,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     )
     btn_iniciar.pack(fill='x', padx=15, pady=(0, 10))
 
-    # ── Header + mapa ──────────────────────────────────────────────────────────
     hdr_mapa = tk.Frame(ventana, bg='#2196F3', height=56)
     hdr_mapa.pack(side='top', fill='x')
     hdr_mapa.pack_propagate(False)
@@ -525,7 +367,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     marcador_centro = {'marker': None}
     ultima_pos = {'lat': None, 'lon': None}
 
-    # ── Funciones internas ────────────────────────────────────────────────────
     def calcular_dist_metros(lat1, lon1, lat2, lon2):
         R = 6371000
         p1, p2 = math.radians(lat1), math.radians(lat2)
@@ -535,13 +376,12 @@ def solicitar_zona(grid_size, G, grid, ciudad):
         return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
     def zonas_en_radio(clat, clon, radio_m):
-        resultado = []
-        for i in range(filas):
-            for j in range(columnas):
-                z = grid[i, j]
-                if calcular_dist_metros(clat, clon, z['lat'], z['lon']) <= radio_m:
-                    resultado.append((i, j))
-        return resultado
+        return [
+            (i, j)
+            for i in range(filas)
+            for j in range(columnas)
+            if calcular_dist_metros(clat, clon, grid[i, j]['lat'], grid[i, j]['lon']) <= radio_m
+        ]
 
     def encontrar_zona_mas_cercana(lat, lon):
         min_d, cerca = float('inf'), (0, 0)
@@ -574,8 +414,10 @@ def solicitar_zona(grid_size, G, grid, ciudad):
         zonas_en_circulo['lista'] = zonas
         n = len(zonas)
         icono = '🔴' if n > 6 else '🟡' if n > 2 else '🟢'
-        zonas_count_label.config(text=f"{icono} {n} zona{'s' if n != 1 else ''} en el círculo",
-                                 fg='#4CAF50' if n > 0 else '#999')
+        zonas_count_label.config(
+            text=f"{icono} {n} zona{'s' if n != 1 else ''} en el círculo",
+            fg='#4CAF50' if n > 0 else '#999'
+        )
 
     def hover_mapa(event):
         coords = mapa_widget.convert_canvas_coords_to_decimal_coords(event.x, event.y)
@@ -605,7 +447,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
                                    'lat': zi['lat'], 'lon': zi['lon']})
         zonas_en_circulo['lista'] = zonas
 
-        # Limpiar marcadores anteriores
         for m in marcadores_zonas:
             try:
                 m.delete()
@@ -613,18 +454,15 @@ def solicitar_zona(grid_size, G, grid, ciudad):
                 pass
         marcadores_zonas.clear()
 
-        # Marcadores verdes en TODAS las zonas del círculo
         for (fi, co) in zonas:
             z = grid[fi, co]
             barrio = z.get('nombre', '')
             label = f"{barrio} [{fi},{co}]" if barrio else f"[{fi},{co}]"
-            mk = mapa_widget.set_marker(z['lat'], z['lon'],
-                                        text=label,
+            mk = mapa_widget.set_marker(z['lat'], z['lon'], text=label,
                                         marker_color_circle="#4CAF50",
                                         marker_color_outside="#2E7D32")
             marcadores_zonas.append(mk)
 
-        # Marcador amarillo en el centro
         if marcador_centro['marker']:
             try:
                 marcador_centro['marker'].delete()
@@ -633,10 +471,8 @@ def solicitar_zona(grid_size, G, grid, ciudad):
         centro_barrio = zi.get('nombre', '')
         centro_label  = f"CENTRO: {centro_barrio} [{fila},{col}]" if centro_barrio else f"CENTRO [{fila},{col}]"
         marcador_centro['marker'] = mapa_widget.set_marker(
-            zi['lat'], zi['lon'],
-            text=centro_label,
-            marker_color_circle="#FFC107",
-            marker_color_outside="#FF6F00")
+            zi['lat'], zi['lon'], text=centro_label,
+            marker_color_circle="#FFC107", marker_color_outside="#FF6F00")
 
         n = len(zonas)
         subtitulo.config(text=f"✅ {n} zonas seleccionadas — presiona ▶ INICIAR ANÁLISIS para continuar")
@@ -654,7 +490,6 @@ def solicitar_zona(grid_size, G, grid, ciudad):
             circulo_hover['polygon'] = dibujar_circulo(zi['lat'], zi['lon'], nuevo)
             actualizar_panel(fila, col, zi['lat'], zi['lon'], nuevo)
 
-    # ── Conectar eventos ──────────────────────────────────────────────────────
     slider.config(command=actualizar_radio)
     mapa_widget.add_left_click_map_command(click_mapa)
     mapa_widget.canvas.bind('<Motion>', hover_mapa)
@@ -665,12 +500,11 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     ventana.geometry(f"+{x}+{y}")
     ventana.mainloop()
 
-    # ── Resultado ─────────────────────────────────────────────────────────────
     if zona_seleccionada['fila'] is not None:
-        fila   = zona_seleccionada['fila']
-        col    = zona_seleccionada['columna']
-        zonas  = zonas_en_circulo['lista']
-        radio  = radio_metros['valor']
+        fila  = zona_seleccionada['fila']
+        col   = zona_seleccionada['columna']
+        zonas = zonas_en_circulo['lista']
+        radio = radio_metros['valor']
         print(f"\n  Centro: [{fila},{col}]  |  Radio: {radio}m  |  Zonas: {len(zonas)}")
         for z in zonas:
             barrio = grid[z[0], z[1]].get('nombre', '')
@@ -685,71 +519,98 @@ def solicitar_zona(grid_size, G, grid, ciudad):
 
 def generar_mapa_html(resultados, ciudad, G, grid, ruta_archivo):
     """Genera un mapa HTML interactivo con los resultados del diagnóstico."""
-    # Obtener el centro del mapa
     nodos = list(G.nodes(data=True))
     if not nodos:
         print("  ⚠️ No hay nodos en el grafo")
         return
-    
+
     lats = [data['y'] for _, data in nodos]
     lons = [data['x'] for _, data in nodos]
     centro_lat = sum(lats) / len(lats)
     centro_lon = sum(lons) / len(lons)
-    
-    # Crear mapa base
-    mapa = folium.Map(
-        location=[centro_lat, centro_lon],
-        zoom_start=12,
-        tiles='OpenStreetMap'
-    )
-    
-    # Agregar marcadores de zonas
+
+    mapa = folium.Map(location=[centro_lat, centro_lon], zoom_start=12, tiles='OpenStreetMap')
+
     for (i, j), diagnostico in resultados.items():
         zona_info = grid[i, j]
         lat = zona_info['lat']
         lon = zona_info['lon']
-        
-        # Color según nivel de riesgo
         color = COLORES_RIESGO.get(diagnostico['nivel'], '#gray')
-        
-        # Crear popup con información
+
         popup_html = f"""
         <div style="font-family: Arial; width: 250px;">
-            <h4 style="margin: 0; color: {color};">
-                {diagnostico['nivel'].upper()}
-            </h4>
+            <h4 style="margin: 0; color: {color};">{diagnostico['nivel'].upper()}</h4>
             <hr style="margin: 5px 0;">
             <p><b>📍 Zona:</b> [{i},{j}]</p>
             <p><b>📊 Factores:</b><br>{', '.join(diagnostico['factores'])}</p>
             <p><b>📜 Regla:</b><br>{diagnostico['regla']}</p>
         </div>
         """
-        
         folium.CircleMarker(
-            location=[lat, lon],
-            radius=8,
+            location=[lat, lon], radius=8,
             popup=folium.Popup(popup_html, max_width=300),
-            color=color,
-            fill=True,
-            fillColor=color,
-            fillOpacity=0.6
+            color=color, fill=True, fillColor=color, fillOpacity=0.6
         ).add_to(mapa)
-    
-    # Guardar mapa
+
     mapa.save(ruta_archivo)
+
+
+def _esperar_cierre_graficas():
+    """
+    Bloquea el proceso principal hasta que el usuario cierre
+    todas las ventanas de matplotlib o presione ENTER.
+    Esto evita que el programa termine y destruya las figuras.
+    """
+    if _modulo_difuso._figuras_abiertas:
+        print("\n" + "="*70)
+        print(f"  📊 {len(_modulo_difuso._figuras_abiertas)} ventana(s) de gráficas abiertas")
+        print("  💡 Cierra las ventanas de matplotlib para terminar el programa,")
+        print("     o presiona ENTER aquí para cerrar todo de inmediato.")
+        print("="*70)
+
+        # Lanzar input en un hilo secundario para no bloquear el event loop de matplotlib
+        import threading
+
+        enter_presionado = threading.Event()
+
+        def esperar_enter():
+            try:
+                input()          # espera ENTER en consola
+            except Exception:
+                pass
+            enter_presionado.set()
+
+        hilo = threading.Thread(target=esperar_enter, daemon=True)
+        hilo.start()
+
+        # plt.show(block=True) procesa eventos de ventana hasta que se cierren TODAS las figuras
+        # o hasta que el hilo de ENTER lo interrumpa periódicamente
+        while _modulo_difuso._figuras_abiertas and not enter_presionado.is_set():
+            # Filtramos figuras que el usuario ya cerró manualmente
+            _modulo_difuso._figuras_abiertas = [
+                f for f in _modulo_difuso._figuras_abiertas
+                if plt.fignum_exists(f.number)
+            ]
+            if not _modulo_difuso._figuras_abiertas:
+                break
+            plt.pause(0.3)   # procesa eventos de UI sin bloquear indefinidamente
+
+        print("\n  ✅ Cerrando el programa...")
+    else:
+        input("\n  Presiona ENTER para salir...")
 
 
 def main():
     """Función principal del sistema."""
     try:
-        # 1. Banner y solicitar ciudad
+        # 1. Banner y obtener ciudad (Ambato por defecto)
         mostrar_banner()
-        ciudad = solicitar_ciudad()
-        
+        ciudad = obtener_ciudad_ambato()
+
         # 2. Seleccionar modo de análisis
         modo = solicitar_modo_analisis()
-        
-        # 3. Cargar mapa (puede tardar 1-2 min la primera vez)
+
+        # 3. Cargar mapa
         print(f"\n  🗺️  Iniciando análisis: {ciudad}")
         try:
             G, bbox = cargar_mapa(ciudad)
@@ -757,30 +618,33 @@ def main():
             print(f"  ❌ Error descargando mapa: {e}")
             print("     Verifica tu conexión a internet.")
             return
-        
+
         # 4. Construir grid
         print(f"  🔲 Generando grid {GRID_SIZE[0]}x{GRID_SIZE[1]}...")
         grid, zonas = construir_grid(G, bbox, filas=GRID_SIZE[0], columnas=GRID_SIZE[1])
         print(f"  ✅ {len(zonas)} zonas creadas")
-        
+
         # 5. Ejecutar según el modo seleccionado
         if modo == '2':
-            # MODO 2: Análisis de zona específica (con círculo)
-            fila_centro, columna_centro, zonas_circulo, radio = solicitar_zona(GRID_SIZE, G, grid, ciudad)
-            
+            # ── MODO 2: Análisis de zona específica (con círculo) ──────────────
+            fila_centro, columna_centro, zonas_circulo, radio = solicitar_zona(
+                GRID_SIZE, G, grid, ciudad
+            )
+
             print(f"\n{'='*70}")
             print(f"  🔍 ANÁLISIS DE ZONA CIRCULAR")
             print(f"  📍 Centro: [{fila_centro},{columna_centro}]")
             print(f"  📏 Radio: {radio} metros")
             print(f"  📊 Total de zonas a analizar: {len(zonas_circulo)}")
             print(f"{'='*70}")
+
             resultados_circulo = {}
             for idx, (fi, co) in enumerate(zonas_circulo):
                 print(f"\n  [{idx+1}/{len(zonas_circulo)}] Analizando zona [{fi},{co}]...")
                 resultado = diagnosticar_zona(grid, fi, co, G, grid_shape=GRID_SIZE)
                 resultados_circulo[(fi, co)] = resultado
 
-            # Resumen del análisis circular
+            # Resumen
             print(f"\n{'='*70}")
             print(f"  ✅ DIAGNÓSTICO CIRCULAR COMPLETADO")
             print(f"{'='*70}")
@@ -788,7 +652,7 @@ def main():
             alto  = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'alto')
             medio = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'medio')
             bajo  = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'bajo')
-            
+
             print(f"  📍 Centro del círculo: [{fila_centro},{columna_centro}]")
             print(f"  📏 Radio analizado: {radio} metros")
             print(f"  📊 {total} zonas analizadas:")
@@ -797,46 +661,48 @@ def main():
             print(f"     🟢 Bajo riesgo:  {bajo:>3} zonas ({bajo/total*100:>5.1f}%)")
             print(f"\n  Detalle por zona:")
             print(f"  {'─'*72}")
+
+            import re as _re
             for (fi, co), r in sorted(resultados_circulo.items()):
-                icono = '🔴' if r['nivel'].lower() == 'alto' else '🟡' if r['nivel'].lower() == 'medio' else '🟢'
+                icono = '🔴' if r['nivel'].lower() == 'alto' else ('🟡' if r['nivel'].lower() == 'medio' else '🟢')
                 nombre_raw = r.get('nombre', '')
-                # Filtrar fallbacks con coordenadas crudas que pudieran venir de caché antigua
-                import re as _re
                 if not nombre_raw or _re.match(r"^(Zona|Sector)\s*\[[-\d.]+,[-\d.]+\]", nombre_raw):
                     nombre = f"Sector [{fi},{co}]"
                 else:
                     nombre = nombre_raw
                 print(f"  {icono} {nombre:<40} → {r['nivel'].upper():<6}  ({', '.join(r['factores'][:2])})")
+
             print(f"{'='*70}\n")
-            
+
         else:
-            # MODO 1: Análisis completo de todas las zonas
+            # ── MODO 1: Análisis completo de todas las zonas ───────────────────
             print(f"\n  🧠 Ejecutando algoritmos de IA...")
             resultados = diagnostico_masivo(grid, zonas, G)
             print(f"  ✅ Análisis completado")
-            
-            # Generar mapa HTML
+
             print(f"\n  🗺️  Generando mapa HTML...")
             nombre_archivo = f"mapa_{ciudad.replace(', ', '_').replace(' ', '_')}.html"
             ruta_mapa = os.path.join(OUTPUT_DIR, nombre_archivo)
             generar_mapa_html(resultados, ciudad, G, grid, ruta_mapa)
-            
-            # Mostrar resumen
+
             total = len(resultados)
-            bajo = sum(1 for r in resultados.values() if r['nivel'].lower() == 'bajo')
+            bajo  = sum(1 for r in resultados.values() if r['nivel'].lower() == 'bajo')
             medio = sum(1 for r in resultados.values() if r['nivel'].lower() == 'medio')
-            alto = sum(1 for r in resultados.values() if r['nivel'].lower() == 'alto')
-            
+            alto  = sum(1 for r in resultados.values() if r['nivel'].lower() == 'alto')
+
             print(f"\n  📊 RESUMEN:")
             print(f"     🔴 Alto:  {alto:>3} zonas ({alto/total*100:>5.1f}%)")
             print(f"     🟡 Medio: {medio:>3} zonas ({medio/total*100:>5.1f}%)")
             print(f"     🟢 Bajo:  {bajo:>3} zonas ({bajo/total*100:>5.1f}%)")
             print(f"\n  🎉 Mapa guardado: {ruta_mapa}")
             print(f"  ✅ Análisis completado exitosamente!\n")
-            
-            # Mantener gráficas de membresía abiertas para la presentación
+
             mantener_graficas_abiertas()
-        
+
+        # ── BLOQUEO FINAL: mantiene el proceso vivo mientras haya gráficas ────
+        # Se ejecuta para AMBOS modos (modo 1 y modo 2).
+        _esperar_cierre_graficas()
+
     except KeyboardInterrupt:
         print("\n\n  ⚠️  Proceso interrumpido.\n")
     except Exception as e:
@@ -847,4 +713,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
