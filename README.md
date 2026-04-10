@@ -1,252 +1,774 @@
-# 🔴 Sistema de Diagnóstico de Zonas Peligrosas con Inteligencia Artificial
+# 🚨 Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
 
-**Proyecto Final de Inteligencia Artificial - Universidad**
+Sistema inteligente para clasificación de zonas urbanas según su nivel de peligro (Bajo/Medio/Alto) utilizando 7 algoritmos de Inteligencia Artificial y mapas reales de ciudades de Ecuador obtenidos mediante OpenStreetMap.
 
-Este proyecto determina si una zona urbana es peligrosa o no, usando algoritmos de inteligencia artificial sobre mapas reales de Ecuador. El sistema analiza factores urbanos, datos históricos y calcula el nivel de riesgo de forma automática y precisa.
+## 📋 Descripción del Proyecto
 
----
+Este sistema implementa un diagnóstico masivo de zonas urbanas mediante la integración de múltiples técnicas de IA:
+- **Algoritmos de búsqueda y optimización**: BFS, DFS, A*, Algoritmo Genético
+- **Sistemas basados en reglas**: Apriori, PRISM
+- **Lógica difusa**: Clasificación Fuzzy
 
-## 📋 Objetivo del Proyecto
-
-Desarrollar un sistema inteligente que:
-- **Analice zonas urbanas** en mapas reales de ciudades de Ecuador usando OpenStreetMap
-- **Determine el nivel de peligro** (Bajo, Medio, Alto) de cada zona
-- **Explique el diagnóstico** mostrando factores principales y reglas encontradas
-- **Visualice resultados** en un mapa interactivo con colores según el nivel de riesgo
-- **Use múltiples algoritmos de IA** de forma integrada y justificada
+El sistema analiza características urbanas (densidad de edificios, accesibilidad vial, comercios, servicios) para determinar el nivel de peligrosidad de cada zona, generando visualizaciones interactivas en HTML con mapas de calor.
 
 ---
 
-## 🎯 Flujo Principal del Sistema
+## 🗂️ Estructura del Proyecto
 
-### 1. **Selección de Ciudad**
-El usuario ingresa la ciudad o país a analizar (ej: "Ambato", "Quito", "Ecuador").
-
-### 2. **Carga de Mapa Real**
-El sistema descarga el mapa desde OpenStreetMap usando `osmnx` y lo guarda en caché para reutilización.
-
-### 3. **Construcción del Grid**
-El mapa se divide en una cuadrícula de 30×30 zonas para análisis detallado. Cada zona contiene:
-- Coordenadas geográficas (latitud, longitud)
-- Cantidad de nodos (intersecciones)
-- Cantidad de calles
-- Densidad urbana
-- Conectividad
-
-### 4. **Diagnóstico Masivo Automático**
-El sistema analiza **todas las zonas** automáticamente usando:
-
-#### **a) Lógica Difusa (scikit-fuzzy)**
-- **Variables de entrada**: robos, vandalismo, microtráfico, accidentes, densidad de calles, densidad de intersecciones
-- **Variables de salida**: nivel de riesgo (0-100)
-- **Método**: Mamdani con defuzzificación por centroide
-- **Funciones de membresía**: triangulares (bajo, medio, alto)
-- **Reglas difusas**: 24 reglas que combinan factores delictivos y urbanos
-- **Resultado**: Score de riesgo preciso entre 0 y 100
-
-#### **b) Algoritmo Genético (optimización de pesos)**
-- **Objetivo**: Optimizar los pesos de los factores para maximizar la precisión del diagnóstico
-- **Población**: 30 individuos (conjuntos de pesos)
-- **Generaciones**: 50 iteraciones
-- **Operadores**: Selección por torneo, cruce de un punto, mutación gaussiana
-- **Fitness**: Precisión de clasificación en dataset de prueba
-- **Resultado**: Pesos óptimos para la lógica difusa
-
-#### **c) Apriori (reglas de asociación)**
-- **Objetivo**: Descubrir patrones frecuentes en los datos
-- **Parámetros**: Soporte mínimo 0.10, confianza mínima 0.70
-- **Dataset**: Zonas clasificadas con sus factores discretizados
-- **Resultado**: Reglas como "SI robos=alto Y vandalismo=medio → riesgo=Alto (conf=0.95)"
-- **Uso**: Explicar el diagnóstico con reglas comprensibles
-
-#### **d) PRISM (inducción de reglas)**
-- **Objetivo**: Generar reglas simples y precisas por clase
-- **Método**: Covering algorithm (cubrir ejemplos clase por clase)
-- **Parámetros**: Precisión mínima 0.85
-- **Resultado**: 3-6 reglas simples por cada nivel de riesgo
-- **Uso**: Proporcionar reglas alternativas y validar consistencia
-
-### 5. **Visualización Interactiva**
-El sistema muestra un mapa web interactivo (usando `folium`) donde:
-- Cada zona está coloreada según su nivel de riesgo:
-  - 🟢 **Verde**: Riesgo Bajo (score 0-30)
-  - 🟠 **Naranja**: Riesgo Medio (score 30-60)
-  - 🔴 **Rojo**: Riesgo Alto (score 60-100)
-- El usuario puede hacer clic en una zona y seleccionar un radio
-- Se muestran todas las zonas dentro del radio seleccionado
-
-### 6. **Diagnóstico Detallado**
-Para cada zona seleccionada, el sistema muestra:
-- **Nombre del lugar** (barrio, calle) usando geocodificación inversa
-- **Coordenadas** (latitud, longitud)
-- **Nivel de riesgo**: Bajo / Medio / Alto
-- **Factores principales**: Lista de variables que influyen más
-- **Regla explicativa**: Regla Apriori o PRISM que justifica el diagnóstico
-- **Emoji visual**: 🟢 🟠 🔴 según el nivel
+```
+SeguridadCiudadana_IA/
+│
+├── main.py                    # Punto de entrada principal
+├── config.py                  # Configuración centralizada
+├── requirements.txt           # Dependencias del proyecto
+├── README.md                  # Documentación completa
+├── .gitignore                 # Archivos ignorados por Git
+│
+├── src/                       # Código fuente
+│   ├── __init__.py
+│   │
+│   ├── algoritmos/            # Implementaciones de IA
+│   │   ├── __init__.py
+│   │   ├── algoritmos.py      # BFS, DFS, A*, análisis de conectividad
+│   │   ├── genetico.py        # Algoritmo Genético para optimización
+│   │   ├── reglas.py          # Apriori y PRISM para reglas
+│   │   └── difuso.py          # Lógica difusa (Fuzzy Logic)
+│   │
+│   ├── core/                  # Módulos principales
+│   │   ├── __init__.py
+│   │   ├── diagnostico.py     # Motor de diagnóstico
+│   │   ├── mapa.py            # Carga y procesamiento de mapas OSM
+│   │   └── visualizacion.py   # Generación de mapas HTML
+│   │
+│   └── utils/                 # Utilidades
+│       ├── __init__.py
+│       └── datos.py           # Generación de datos sintéticos
+│
+├── data/                      # Datos del sistema
+│   └── cache/                 # Cache de nombres de zonas (Nominatim)
+│
+├── output/                    # Resultados generados
+│   ├── grid_*.html           # Grid de zonas del mapa
+│   └── mapa_*.html           # Mapas de calor con resultados
+│
+├── .vscode/                   # Configuración de VS Code
+│   └── tasks.json            # Tareas predefinidas
+│
+└── clean_project.bat          # Script de limpieza del proyecto
+│
+├── output/                    # Mapas generados (HTML)
+│   ├── mapa_Quito_Ecuador.html
+│   ├── mapa_Guayaquil_Ecuador.html
+│   └── ...
+│
+└── docs/                      # Documentación adicional
+```
 
 ---
 
 ## 🧠 Algoritmos de IA Implementados
 
-### **1. Lógica Difusa (Fuzzy Logic)**
-- **Módulo**: `difuso.py`
-- **Librería**: `scikit-fuzzy`
-- **Función**: `clasificar_zona_difusa(datos_zona)`
-- **Justificación**: Permite manejar incertidumbre y valores imprecisos en los datos delictivos
-- **Salida**: Score de riesgo [0-100] y nivel (Bajo/Medio/Alto)
+### 1. **BFS (Breadth-First Search)**
+- **Ubicación**: `src/algoritmos/algoritmos.py`
+- **Función**: Búsqueda en anchura para análisis de conectividad
+- **Uso**: Identificar nodos alcanzables desde zonas de alta peligrosidad
+- **Implementación**: Búsqueda nivel por nivel usando cola
 
-### **2. Algoritmo Genético (Genetic Algorithm)**
-- **Módulo**: `genetico.py`
-- **Función**: `optimizar_pesos_genetico(dataset, poblacion=30, generaciones=50)`
-- **Justificación**: Encuentra automáticamente los mejores pesos para maximizar la precisión de clasificación
-- **Salida**: Diccionario de pesos óptimos para cada factor
+### 2. **DFS (Depth-First Search)**
+- **Ubicación**: `src/algoritmos/algoritmos.py`
+- **Función**: Búsqueda en profundidad para exploración exhaustiva
+- **Uso**: Análisis de rutas y caminos en grafos urbanos
+- **Implementación**: Búsqueda recursiva con stack
 
-### **3. Apriori (Association Rules)**
-- **Módulo**: `reglas.py`
-- **Librería**: `mlxtend`
-- **Función**: `generar_reglas_apriori(dataset, min_support=0.10, min_confidence=0.70)`
-- **Justificación**: Descubre patrones y relaciones entre factores de riesgo
-- **Salida**: Lista de reglas con soporte, confianza y lift
+### 3. **A\* (A Star)**
+- **Ubicación**: `src/algoritmos/algoritmos.py`
+- **Función**: Búsqueda de camino óptimo con heurística
+- **Uso**: Encontrar rutas más seguras entre dos puntos
+- **Heurística**: Distancia euclidiana
+- **Implementación**: Priority queue con f(n) = g(n) + h(n)
 
-### **4. PRISM (Rule Induction)**
-- **Módulo**: `reglas.py`
-- **Función**: `generar_reglas_prism(dataset, min_precision=0.85)`
-- **Justificación**: Genera reglas simples y precisas para explicar cada nivel de riesgo
-- **Salida**: Lista de reglas con precisión y cobertura
+### 4. **Algoritmo Genético (AG)**
+- **Ubicación**: `src/algoritmos/genetico.py`
+- **Función**: Optimización de pesos para clasificación
+- **Parámetros**:
+  - Generaciones: 50
+  - Población: 30
+  - Tasa de mutación: 0.1
+  - Tasa de cruce: 0.7
+- **Proceso**:
+  1. Inicializar población de pesos aleatorios
+  2. Evaluar fitness (accuracy de clasificación)
+  3. Selección por torneo
+  4. Cruce de un punto
+  5. Mutación gaussiana
+  6. Elitismo (mantener mejores individuos)
+- **Salida**: Pesos optimizados [w1, w2, w3, w4] para características urbanas
 
-### **5. BFS (Breadth-First Search)**
-- **Módulo**: `algoritmos.py`
-- **Función**: `bfs(grafo, origen, destino)`
-- **Justificación**: Búsqueda no informada para encontrar rutas entre zonas
-- **Salida**: Lista de nodos en la ruta más corta (por cantidad de nodos)
+### 5. **Apriori**
+- **Ubicación**: `src/algoritmos/reglas.py`
+- **Función**: Descubrimiento de reglas de asociación
+- **Parámetros**:
+  - Soporte mínimo: 0.1 (10%)
+  - Confianza mínima: 0.7 (70%)
+- **Proceso**:
+  1. Generar itemsets frecuentes (L1, L2, ...)
+  2. Calcular soporte: `soporte(X) = transacciones_con_X / total_transacciones`
+  3. Generar reglas: X → Y
+  4. Calcular confianza: `confianza(X→Y) = soporte(X∪Y) / soporte(X)`
+  5. Filtrar reglas por confianza mínima
+- **Salida**: Reglas tipo "SI densidad_baja Y pocos_comercios ENTONCES peligro_alto (conf: 0.85)"
 
-### **6. DFS (Depth-First Search)**
-- **Módulo**: `algoritmos.py`
-- **Función**: `dfs(grafo, origen, destino)`
-- **Justificación**: Búsqueda en profundidad para explorar conexiones entre zonas
-- **Salida**: Lista de nodos en una ruta (puede no ser óptima)
+### 6. **PRISM (PRe-pruning Incremental Statistical Metric)**
+- **Ubicación**: `src/algoritmos/reglas.py`
+- **Función**: Generación de reglas de clasificación por clase
+- **Parámetros**:
+  - Confianza mínima: 0.5 (50%)
+- **Proceso** (siguiendo el método del instructor):
+  1. Para cada clase objetivo:
+     - Mientras haya ejemplos disponibles:
+       - Probar cada condición posible
+       - Calcular confianza: `confianza = correctos / total_que_cumplen`
+       - Seleccionar condición con mayor confianza
+       - Agregar condición a la regla
+       - Marcar ejemplos cubiertos
+  2. Repetir hasta cubrir todos los ejemplos
+- **Ejemplo de salida**:
+  ```
+  ITERACIÓN 1:
+  Mejor condición: densidad='Baja' (confianza: 0.75, 3/4 correctos)
+  Regla parcial: SI densidad='Baja' ENTONCES clase_Alto
+  ```
+- **Salida**: Conjunto de reglas para cada clase
 
-### **7. A* (A-Star)**
-- **Módulo**: `algoritmos.py`
-- **Función**: `astar(grafo, origen, destino)`
-- **Justificación**: Búsqueda informada con heurística de distancia Haversine
-- **Salida**: Lista de nodos en la ruta óptima (distancia real)
-
-### **8. Hill Climbing (Ascenso de Colinas)**
-- **Módulo**: `algoritmos.py`
-- **Función**: `hill_climbing(grafo, ruta_inicial, grid_riesgo)`
-- **Justificación**: Optimización local para mejorar rutas evitando zonas peligrosas
-- **Salida**: Ruta mejorada con menor riesgo promedio
+### 7. **Lógica Difusa (Fuzzy Logic)**
+- **Ubicación**: `src/algoritmos/difuso.py`
+- **Función**: Clasificación mediante conjuntos difusos
+- **Variables lingüísticas**:
+  - Densidad: {Baja, Media, Alta}
+  - Conectividad: {Mala, Regular, Buena}
+  - Comercios: {Pocos, Algunos, Muchos}
+  - Servicios: {Pocos, Algunos, Muchos}
+- **Funciones de membresía**: Triangulares/Trapezoidales
+- **Reglas difusas**: 27 reglas tipo "SI densidad ES alta Y conectividad ES buena ENTONCES peligro ES bajo"
+- **Defuzzificación**: Centroide
+- **Salida**: Valor de peligro [0-100] y clasificación (Bajo/Medio/Alto)
 
 ---
 
-## 📁 Estructura del Proyecto
+## 🔄 Flujo del Sistema
 
 ```
-SeguridadCiudadana_IA/
-│
-├── main.py                  # Flujo principal del sistema
-├── mapa.py                  # Carga de mapas OSM y construcción de grid
-├── datos.py                 # Generación de datos sintéticos y históricos
-├── difuso.py                # Lógica difusa con scikit-fuzzy
-├── genetico.py              # Algoritmo genético para optimización
-├── reglas.py                # Apriori y PRISM para generación de reglas
-├── algoritmos.py            # BFS, DFS, A*, Hill Climbing
-├── diagnostico.py           # Lógica de diagnóstico y clasificación
-├── visualizacion.py         # Mapas interactivos con folium
-├── README.md                # Este archivo
-├── cache/                   # Caché de mapas descargados
-└── __pycache__/             # Archivos compilados de Python
+1. main.py
+   ↓
+2. Cargar mapa OSM de la ciudad (mapa.py)
+   ↓
+3. Crear grafo G de nodos urbanos
+   ↓
+4. diagnostico_masivo() → Para cada nodo:
+   ↓
+   4.1 Generar características sintéticas (datos.py)
+   ↓
+   4.2 Optimizar pesos con Algoritmo Genético (genetico.py)
+   ↓
+   4.3 Clasificar con Lógica Difusa (difuso.py)
+   ↓
+   4.4 Generar reglas Apriori y PRISM (reglas.py)
+   ↓
+   4.5 Analizar conectividad con BFS (algoritmos.py)
+   ↓
+5. Generar mapa HTML con visualización (visualizacion.py)
 ```
 
 ---
 
-## 🚀 Cómo Ejecutar el Proyecto
+## 🚀 Instalación
 
-### **Requisitos Previos**
+### Requisitos
+- **Python**: 3.8 o superior
+- **Sistema Operativo**: Windows, Linux, macOS
+- **RAM**: 4GB mínimo (8GB recomendado)
+- **Conexión a Internet**: Para descargar mapas de OpenStreetMap
+
+### Dependencias
+
+Instala todas las dependencias con un solo comando:
+
 ```bash
-pip install osmnx networkx numpy pandas scikit-fuzzy mlxtend folium geopy matplotlib
+pip install -r requirements.txt
 ```
 
-### **Ejecución**
+Dependencias principales:
+- `osmnx` - Descarga y análisis de mapas urbanos
+- `networkx` - Procesamiento de grafos
+- `folium` - Visualización de mapas interactivos
+- `scikit-fuzzy` - Lógica difusa
+- `numpy` - Computación numérica
+- `scikit-learn` - Algoritmo Genético
+
+### Instalación paso a paso
+
+1. **Clonar el repositorio** (o descargar el proyecto):
+   ```bash
+   git clone <url-repositorio>
+   cd SeguridadCiudadana_IA
+   ```
+
+2. **Crear entorno virtual** (opcional pero recomendado):
+   ```bash
+   python -m venv venv
+   
+   # Activar entorno virtual:
+   # Windows:
+   venv\Scripts\activate
+   
+   # Linux/Mac:
+   source venv/bin/activate
+   ```
+
+3. **Instalar dependencias**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+   
+   *Nota: La instalación puede tomar 2-5 minutos (osmnx es grande)*
+
+4. **Ejecutar el sistema**:
+   ```bash
+   python main.py
+   ```
+
+---
+## 💻 Uso
+
+### Ejecución
+
 ```bash
 python main.py
 ```
 
-### **Flujo de Uso**
-1. Ingresa la ciudad (ej: "Ambato, Ecuador")
-2. Espera a que se cargue el mapa y se realice el diagnóstico masivo
-3. Se abrirá un mapa interactivo en tu navegador
-4. Haz clic en una zona y selecciona el radio
-5. El sistema mostrará el diagnóstico detallado de todas las zonas cercanas
+El sistema te guiará automáticamente a través del proceso:
 
----
+1. ✅ Muestra el banner de bienvenida
+2. ✅ Lista las ciudades disponibles de Ecuador
+3. ✅ Solicita la ciudad a analizar
+4. ✅ Descarga el mapa desde OpenStreetMap
+5. ✅ Ejecuta los 7 algoritmos de IA
+6. ✅ Genera el mapa HTML interactivo
+7. ✅ Muestra el resumen de resultados
 
-## 📊 Resultados y Métricas
+### Ejemplo de sesión
 
-### **Precisión del Sistema**
-- Lógica difusa baseline: ~68%
-- Con pesos optimizados por algoritmo genético: ~83%
-- Mejora: +15% de precisión
-
-### **Reglas Generadas**
-- Apriori: ~2490 reglas (soporte≥0.10, confianza≥0.70)
-- PRISM: ~6 reglas (precisión≥0.85)
-
-### **Ejemplo de Diagnóstico**
 ```
-🔴 Parque Central, Ambato
-   📍 Coordenadas: [12,15] - Lat: -1.2478, Lon: -78.6232
-   ⚠️  Nivel de riesgo: Alto
-   📊 Factores principales: robos, vandalismo, densidad_alta
-   📜 Regla: SI robos=alto Y densidad_calles=alta → riesgo=Alto (conf=0.95)
+$ python main.py
+
+======================================================================
+  🚨 SISTEMA DE DIAGNÓSTICO DE ZONAS DE PELIGRO URBANO CON IA
+======================================================================
+  📍 Universidad Politécnica Salesiana
+  🧠 7 Algoritmos de IA: BFS, DFS, A*, AG, Apriori, PRISM, Fuzzy
+  🗺️  Mapas reales de Ecuador (OpenStreetMap)
+======================================================================
+
+  Ingresa la ciudad a analizar: Quito
+
+  📥 CARGANDO MAPA...
+  ✅ Mapa cargado: 15,342 nodos, 23,891 calles
+  
+  🧠 APLICANDO ALGORITMOS DE IA...
+  ✅ 900 zonas analizadas
+  
+  🗺️  MAPA GENERADO: output/mapa_Quito_Ecuador.html
+  
+  📈 RESUMEN:
+     🟢 Bajo:  300 zonas (33.3%)
+     🟡 Medio: 400 zonas (44.4%)
+     🔴 Alto:  200 zonas (22.2%)
+```
+7. Muestra el resumen de resultados
+
+### Configuración personalizada
+
+Editar `config.py`:
+
+```python
+# Ciudades a procesar
+CIUDADES = [
+    "Quito, Ecuador",
+    "Guayaquil, Ecuador",
+    # Agregar más ciudades...
+]
+
+# Tamaño de la grilla para análisis
+GRID_SIZE = (30, 30)  # 30x30 = 900 zonas por ciudad
+### Cambiar ciudad sin ejecutar interactivamente
+
+Si quieres procesar una ciudad sin el modo interactivo, edita directamente `main.py` en la función `main()`:
+
+```python
+# En lugar de solicitar_ciudad(), usa directamente:
+ciudad = "Cuenca, Ecuador"
+``` 'tasa_cruce': 0.7
+}
+
+# Parámetros de Apriori
+APRIORI_CONFIG = {
+    'min_soporte': 0.1,
+    'min_confianza': 0.7
+}
+
+# Parámetros de PRISM
+PRISM_CONFIG = {
+    'min_confianza': 0.5
+}
+```
+
+### Procesar una ciudad específica
+
+Modificar `main.py`:
+
+```python
+if __name__ == "__main__":
+    ciudad = "Cuenca, Ecuador"
+    resultado = diagnostico_masivo(ciudad)
+    print(f"Mapa generado: output/mapa_{ciudad.replace(', ', '_')}.html")
 ```
 
 ---
 
-## 🎓 Fundamentos Académicos
+## 📊 Salida del Sistema
 
-### **Por qué cada algoritmo**
+### Mapas HTML interactivos
 
-1. **Lógica Difusa**: Maneja incertidumbre en datos delictivos imprecisos
-2. **Algoritmo Genético**: Optimiza automáticamente los pesos del sistema
-3. **Apriori**: Descubre patrones y relaciones ocultas en los datos
-4. **PRISM**: Genera reglas explicativas simples y precisas
-5. **BFS/DFS/A*/Hill Climbing**: Calculan rutas seguras y analizan conectividad urbana
+Cada mapa generado incluye:
+- **Marcadores de zonas**: Coloreados según nivel de peligro
+  - 🟢 **Verde**: Bajo
+  - 🟡 **Amarillo**: Medio
+  - 🔴 **Rojo**: Alto
+- **Información emergente**: Click en cada zona para ver:
+  - Clasificación (Bajo/Medio/Alto)
+  - Puntaje de peligro (0-100)
+  - Reglas aplicadas (Apriori/PRISM)
+  - Conectividad (nodos alcanzables)
+- **Mapa de calor**: Visualización de densidad de peligro
 
-### **Integración de Algoritmos**
-- El algoritmo genético **optimiza** la lógica difusa
-- Apriori y PRISM **explican** el diagnóstico generado por lógica difusa
-- Los algoritmos de búsqueda **complementan** el análisis con rutas y conectividad
+### Salida de consola
 
----
+Ejemplo:
+```
+========================================
+CIUDAD: Quito, Ecuador
+========================================
 
-## 👨‍💻 Autor
+Zona 1 (lat: -0.1807, lon: -78.4678):
+  Clasificación: Alto
+  Puntaje: 85.3
+  Reglas aplicadas:
+    - Apriori: SI densidad_baja Y pocos_comercios ENTONCES peligro_alto (conf: 0.85)
+    - PRISM: SI densidad='Baja' ENTONCES clase_Alto (conf: 0.75)
+  Conectividad: 12 nodos alcanzables en 500m
 
-**Proyecto Final de Inteligencia Artificial**  
-Universidad - Séptimo Semestre  
-Sistema de Diagnóstico Inteligente de Zonas Urbanas
+----------------------------------------
 
----
-
-## 📝 Notas Técnicas
-
-- Los datos delictivos son **sintéticos** con distribuciones realistas
-- El sistema usa **caché local** para evitar descargar mapas repetidamente
-- La geocodificación inversa usa **Nominatim** de OpenStreetMap
-- Todas las visualizaciones usan **coordenadas reales** de Ecuador
-- El código está completamente en **español** para facilitar comprensión
-
----
-
-## 🔮 Mejoras Futuras
-
-- Integración con datos reales de la Policía Nacional
-- Análisis temporal (evolución del riesgo en el tiempo)
-- Predicción de zonas que aumentarán su peligrosidad
-- App móvil para consulta en tiempo real
-- Sistema de alertas georreferenciadas
+Mapa generado exitosamente en: output/mapa_Quito_Ecuador.html
+```
 
 ---
 
-**🚨 Este es un proyecto académico. Los diagnósticos son simulados y no deben usarse para decisiones reales de seguridad.**
+## ⚙️ Configuración Técnica
+
+### Parámetros del sistema
+
+| Parámetro | Valor | Descripción |
+|-----------|-------|-------------|
+| `GRID_SIZE` | (30, 30) | Grilla de análisis (900 zonas) |
+| `RADIO_CONECTIVIDAD` | 500 m | Radio de búsqueda BFS |
+| `GENETICO.generaciones` | 50 | Iteraciones del AG |
+| `GENETICO.poblacion` | 30 | Individuos por generación |
+| `GENETICO.tasa_mutacion` | 0.1 | Probabilidad de mutación |
+| `GENETICO.tasa_cruce` | 0.7 | Probabilidad de cruce |
+| `APRIORI.min_soporte` | 0.1 | Soporte mínimo (10%) |
+| `APRIORI.min_confianza` | 0.7 | Confianza mínima (70%) |
+| `PRISM.min_confianza` | 0.5 | Confianza mínima (50%) |
+
+### Funciones de membresía difusa
+
+**Densidad de edificios** (edificios/km²):
+- Baja: [0, 0, 50, 100]
+- Media: [50, 100, 150, 200]
+- Alta: [150, 200, 300, 300]
+
+**Conectividad vial** (índice 0-1):
+- Mala: [0, 0, 0.3, 0.5]
+- Regular: [0.3, 0.5, 0.7]
+- Buena: [0.5, 0.7, 1, 1]
+
+**Comercios y Servicios** (cantidad):
+- Pocos: [0, 0, 10, 20]
+- Algunos: [10, 20, 30, 40]
+- Muchos: [30, 40, 100, 100]
+
+---
+
+## 🏙️ Ciudades de Ecuador Incluidas
+
+El sistema está configurado para procesar 16 ciudades principales:
+
+1. Quito
+2. Guayaquil
+3. Cuenca
+4. Santo Domingo
+5. Machala
+6. Durán
+7. Manta
+8. Portoviejo
+9. Loja
+10. Ambato
+11. Esmeraldas
+12. Quevedo
+13. Riobamba
+14. Milagro
+15. Ibarra
+16. La Libertad
+
+Los mapas se descargan automáticamente de OpenStreetMap y se cachean en `data/cache/`.
+
+---
+
+## 📖 Documentación Técnica
+
+### Módulo: `src/algoritmos/algoritmos.py`
+
+**Funciones principales**:
+
+```python
+def bfs(G, nodo_inicio, max_distancia=500):
+    """Búsqueda en anchura desde un nodo.
+    
+    Args:
+        G: Grafo NetworkX
+        nodo_inicio: Nodo de inicio
+        max_distancia: Distancia máxima en metros
+        
+    Returns:
+        set: Nodos alcanzables
+    """
+
+def dfs(G, nodo_inicio, visitados=None):
+    """Búsqueda en profundidad.
+    
+    Args:
+        G: Grafo NetworkX
+        nodo_inicio: Nodo de inicio
+        visitados: Set de nodos visitados
+        
+    Returns:
+        set: Nodos alcanzables
+    """
+
+def astar(G, nodo_inicio, nodo_fin):
+    """Búsqueda A* de camino óptimo.
+    
+    Args:
+        G: Grafo NetworkX
+        nodo_inicio: Nodo de inicio
+        nodo_fin: Nodo destino
+        
+    Returns:
+        list: Camino óptimo
+    """
+
+def analizar_conectividad_zona(G, nodos_zona, radio=500):
+    """Analiza conectividad de una zona usando BFS.
+    
+    Args:
+        G: Grafo NetworkX
+        nodos_zona: Lista de nodos de la zona
+        radio: Radio de búsqueda en metros
+        
+    Returns:
+        dict: {
+            'nodos_alcanzables': int,
+            'nodos_cercanos': list
+        }
+    """
+```
+
+### Módulo: `src/algoritmos/genetico.py`
+
+**Función principal**:
+
+```python
+def optimizar_pesos(ejemplos, generaciones=50, poblacion=30):
+    """Optimiza pesos usando Algoritmo Genético.
+    
+    Args:
+        ejemplos: Lista de tuplas (caracteristicas, clase)
+        generaciones: Número de generaciones
+        poblacion: Tamaño de la población
+        
+    Returns:
+        list: Pesos optimizados [w1, w2, w3, w4]
+    """
+```
+
+### Módulo: `src/algoritmos/reglas.py`
+
+**Funciones principales**:
+
+```python
+def reglas_apriori(dataset=None, min_soporte=0.1, min_confianza=0.7):
+    """Genera reglas de asociación con Apriori.
+    
+    Args:
+        dataset: Lista de transacciones
+        min_soporte: Soporte mínimo
+        min_confianza: Confianza mínima
+        
+    Returns:
+        list: Reglas generadas
+    """
+
+def reglas_prism(dataset=None, min_confianza=0.5):
+    """Genera reglas de clasificación con PRISM.
+    
+    Args:
+        dataset: Lista de ejemplos (caracteristicas, clase)
+        min_confianza: Confianza mínima
+        
+    Returns:
+        list: Reglas por clase
+    """
+
+def obtener_regla_explicativa(caracteristicas, clasificacion, reglas_apriori, reglas_prism):
+    """Obtiene la mejor regla que explica la clasificación.
+    
+    Args:
+        caracteristicas: Dict con características de la zona
+        clasificacion: Clase asignada
+        reglas_apriori: Reglas de Apriori
+        reglas_prism: Reglas de PRISM
+        
+    Returns:
+        str: Regla explicativa
+    """
+```
+
+### Módulo: `src/algoritmos/difuso.py`
+
+**Función principal**:
+
+```python
+def clasificar_difuso(densidad, conectividad, comercios, servicios):
+    """Clasifica zona usando lógica difusa.
+    
+    Args:
+        densidad: Densidad de edificios (0-300)
+        conectividad: Índice de conectividad (0-1)
+        comercios: Número de comercios (0-100)
+        servicios: Número de servicios (0-100)
+        
+    Returns:
+        tuple: (clasificacion, puntaje)
+            clasificacion: 'Bajo', 'Medio', 'Alto'
+            puntaje: Valor numérico 0-100
+    """
+```
+
+### Módulo: `src/core/diagnostico.py`
+
+**Funciones principales**:
+
+```python
+def diagnosticar_zona(lat, lon, G):
+    """Diagnostica una zona específica.
+    
+    Args:
+        lat: Latitud
+        lon: Longitud
+        G: Grafo NetworkX de la ciudad
+        
+    Returns:
+        dict: {
+            'coordenadas': (lat, lon),
+            'clasificacion': str,
+            'puntaje': float,
+            'regla': str,
+            'conectividad': int
+        }
+    """
+
+def diagnostico_masivo(ciudad):
+    """Procesa una ciudad completa.
+    
+    Args:
+        ciudad: Nombre de la ciudad (ej: "Quito, Ecuador")
+        
+    Returns:
+        dict: Resultados del diagnóstico
+    """
+```
+
+### Módulo: `src/core/mapa.py`
+
+**Función principal**:
+
+```python
+def cargar_mapa(ciudad, usar_cache=True):
+    """Carga mapa de OpenStreetMap.
+    
+    Args:
+        ciudad: Nombre de la ciudad
+        usar_cache: Si usar caché local
+        
+    Returns:
+        networkx.Graph: Grafo de calles de la ciudad
+    """
+```
+
+### Módulo: `src/core/visualizacion.py`
+
+**Función principal**:
+
+```python
+def generar_mapa_html(resultados, ciudad, G):
+    """Genera mapa HTML interactivo.
+    
+    Args:
+        resultados: Lista de diagnósticos
+        ciudad: Nombre de la ciudad
+        G: Grafo NetworkX
+        
+    Returns:
+        str: Ruta del archivo HTML generado
+    """
+```
+
+---
+
+## 🛠️ Solución de Problemas
+
+### Error: "NetworkXNoPath"
+**Causa**: No existe camino entre dos nodos en A*.  
+**Solución**: El sistema maneja la excepción automáticamente.
+
+### Error: "No se encontró el mapa en caché"
+**Causa**: Primera ejecución o caché eliminado.  
+**Solución**: El sistema descarga automáticamente de OSM.
+
+### Error: "MemoryError" al procesar ciudades grandes
+**Causa**: Grid demasiado grande o RAM insuficiente.  
+**Solución**: Reducir `GRID_SIZE` en `config.py` (ej: (20, 20)).
+
+### Mapas HTML no se generan
+**Causa**: Carpeta `output/` no existe.  
+**Solución**: El sistema crea la carpeta automáticamente.
+
+### Rendimiento lento
+**Solución**:
+- Reducir número de generaciones del AG
+- Disminuir tamaño de población
+- Usar grilla más pequeña
+
+---
+
+## 📚 Referencias
+
+### Algoritmos implementados
+- **BFS/DFS**: Cormen, T. H., et al. "Introduction to Algorithms" (4th ed., 2022)
+- **A\***: Hart, P. E., Nilsson, N. J., & Raphael, B. (1968). "A Formal Basis for the Heuristic Determination of Minimum Cost Paths"
+- **Algoritmo Genético**: Holland, J. H. (1975). "Adaptation in Natural and Artificial Systems"
+- **Apriori**: Agrawal, R., & Srikant, R. (1994). "Fast Algorithms for Mining Association Rules"
+- **PRISM**: Cendrowska, J. (1987). "PRISM: An Algorithm for Inducing Modular Rules"
+- **Lógica Difusa**: Zadeh, L. A. (1965). "Fuzzy Sets"
+
+### Bibliotecas utilizadas
+- **OSMnx**: Boeing, G. (2017). "OSMnx: New methods for acquiring, constructing, analyzing, and visualizing complex street networks"
+- **NetworkX**: Hagberg, A. A., et al. (2008). "Exploring Network Structure, Dynamics, and Function using NetworkX"
+- **Folium**: Python bindings for Leaflet.js
+- **scikit-fuzzy**: Fuzzy logic toolkit for Python
+
+---
+
+## 👨‍💻 Desarrollo
+
+### Estructura de paquetes
+
+El proyecto sigue una arquitectura modular:
+
+- **`src/algoritmos/`**: Lógica de IA (independiente del dominio)
+- **`src/core/`**: Lógica de negocio (dominio urbano)
+- **`src/utils/`**: Utilidades comunes
+
+### Agregar nuevas ciudades
+
+Editar `config.py`:
+
+```python
+CIUDADES = [
+    "Quito, Ecuador",
+    "Guayaquil, Ecuador",
+    "NuevaCiudad, Ecuador"  # Agregar aquí
+]
+```
+
+### Agregar nuevos algoritmos
+
+1. Crear archivo en `src/algoritmos/`
+2. Implementar función principal
+3. Exportar en `src/algoritmos/__init__.py`
+4. Integrar en `src/core/diagnostico.py`
+
+---
+
+## 📄 Licencia
+
+Este proyecto fue desarrollado con fines académicos para el curso de Inteligencia Artificial.
+
+**Institución**: Universidad Politécnica Salesiana  
+**Curso**: Inteligencia Artificial  
+**Semestre**: Séptimo  
+**Año**: 2024
+
+---
+
+## 🤝 Contribuciones
+
+Proyecto académico. Para sugerencias o mejoras, contactar a los autores.
+
+---
+
+## 📞 Contacto
+
+**Autor**: Paul Vacacela  
+**Proyecto**: Sistema de Diagnóstico de Zonas de Peligro Urbano  
+**Universidad**: Universidad Politécnica Salesiana
+
+---
+
+## 🎯 Funcionalidades Destacadas
+
+✅ **7 algoritmos de IA integrados** (BFS, DFS, A*, AG, Apriori, PRISM, Fuzzy)  
+✅ **Mapas reales** de 16 ciudades de Ecuador  
+✅ **Visualizaciones interactivas** con Folium  
+✅ **Sistema de caché** para mapas OSM  
+✅ **Configuración centralizada** en `config.py`  
+✅ **Arquitectura modular** y escalable  
+✅ **Reglas explicativas** para cada clasificación  
+✅ **Análisis de conectividad** urbana  
+✅ **Optimización automática** de parámetros con AG  
+
+---
+
+## 📊 Estadísticas del Proyecto
+
+- **Líneas de código**: ~2000
+- **Módulos**: 10
+- **Algoritmos**: 7
+- **Ciudades procesables**: 16
+- **Zonas por ciudad**: 900 (30x30)
+- **Tiempo de procesamiento**: ~30-60 seg/ciudad
+- **Formato de salida**: HTML interactivo
+
+---
+
+**¡Sistema listo para uso académico y demostración! 🚀**

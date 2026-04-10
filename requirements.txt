@@ -1,0 +1,30 @@
+# ============================================================================
+# REQUIREMENTS.TXT - Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
+# ============================================================================
+# 
+# Instalación:
+#   pip install -r requirements.txt
+#
+# ============================================================================
+
+# Mapas y grafos urbanos
+osmnx>=1.5.0
+networkx>=3.0
+
+# Visualización de mapas
+folium>=0.14.0
+
+# Lógica difusa
+scikit-fuzzy>=0.4.2
+
+# Procesamiento numérico
+numpy>=1.24.0
+
+# Machine Learning (para Algoritmo Genético)
+scikit-learn>=1.3.0
+
+# Opcional: Geocodificación (para nombres de lugares)
+geopy>=2.3.0
+
+# Opcional: Progress bars
+tqdm>=4.65.0

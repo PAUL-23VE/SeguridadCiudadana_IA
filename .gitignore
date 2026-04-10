@@ -1,0 +1,138 @@
+# ============================================================================
+# GITIGNORE - Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
+# ============================================================================
+
+# ============================================================================
+# PYTHON
+# ============================================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ============================================================================
+# ENTORNOS VIRTUALES
+# ============================================================================
+venv/
+ENV/
+env/
+.venv/
+
+# ============================================================================
+# IDEs Y EDITORES
+# ============================================================================
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# ============================================================================
+# SISTEMAS OPERATIVOS
+# ============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# ============================================================================
+# ARCHIVOS DEL PROYECTO
+# ============================================================================
+
+# Mapas HTML generados (pueden ser muy grandes)
+output/*.html
+
+# Caché de mapas OSM (opcional: descomentar si no quieres versionar)
+# data/cache/*.json
+# data/cache/*.osm
+
+# Archivos de prueba temporales
+test_*.py
+verificar_*.py
+prueba_*.py
+_check.py
+debug_*.py
+
+# Documentación temporal/redundante
+VERIFICACION_*.md
+RESUMEN_*.md
+GUIA_*.md
+IMPLEMENTACION_*.md
+INDICE_*.md
+PROYECTO_*.md
+REORGANIZACION_*.md
+EXPLICACION_*.md
+
+# ============================================================================
+# JUPYTER NOTEBOOKS
+# ============================================================================
+.ipynb_checkpoints/
+*.ipynb
+
+# ============================================================================
+# LOGS Y BASES DE DATOS
+# ============================================================================
+*.log
+*.sqlite
+*.db
+
+# ============================================================================
+# DEPENDENCIAS Y PAQUETES
+# ============================================================================
+*.whl
+*.tar.gz
+
+# ============================================================================
+# ARCHIVOS DE CONFIGURACIÓN LOCAL
+# ============================================================================
+.env
+.env.local
+secrets.py
+config.local.py
+
+# ============================================================================
+# ARCHIVOS TEMPORALES
+# ============================================================================
+*.tmp
+*.bak
+*.backup
+*~
+mapa_*.html
