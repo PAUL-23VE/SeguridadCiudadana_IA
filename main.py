@@ -26,6 +26,8 @@ try:
     from src.core.diagnostico import diagnosticar_zona
     from src.algoritmos import difuso as _modulo_difuso
     from src.algoritmos.difuso import mantener_graficas_abiertas
+    from src.utils.historicos import obtener_gestor
+    from src.algoritmos.montecarlo import visualizar_simulaciones_montecarlo
 except ImportError as e:
     print(f"❌ Error al importar módulos: {e}")
     print("   Verifica que la estructura del proyecto esté correcta.")
@@ -45,6 +47,183 @@ def mostrar_banner():
 def obtener_ciudad_ambato():
     """Retorna directamente la ciudad de Ambato para el análisis."""
     return "Ambato, Ecuador"
+
+
+def generar_visualizaciones_historicos_reales(gestor):
+    """
+    Genera visualizaciones de DATOS HISTÓRICOS REALES (12 meses del CSV).
+    
+    Parámetros
+    ----------
+    gestor : GestorHistoricos
+        Gestor de datos históricos
+    """
+    if gestor.datos is None:
+        return
+    
+    print("\n  📊 GENERANDO VISUALIZACIONES DE DATOS HISTÓRICOS REALES")
+    print("  " + "═" * 66)
+    print("  Graficando los 12 meses de datos del CSV...")
+    print("  " + "─" * 66)
+    
+    from src.algoritmos.montecarlo import visualizar_datos_historicos_reales
+    
+    zonas = ['Norte', 'Sur', 'Este', 'Oeste']
+    archivos_generados = []
+    
+    for zona in zonas:
+        stats = gestor.estadisticas.get(zona, {})
+        if not stats:
+            print(f"  ⚠️  Zona {zona}: Sin datos")
+            continue
+        
+        try:
+            # Generar visualización de datos REALES
+            nombre_archivo = f"historicos_{zona.lower()}_reales.png"
+            ruta_archivo = os.path.join(OUTPUT_DIR, nombre_archivo)
+            
+            resultado = visualizar_datos_historicos_reales(
+                zona=zona,
+                estadisticas=stats,
+                mostrar=False,
+                guardar_path=ruta_archivo
+            )
+            
+            print(f"  ✓ {zona:6s} → {nombre_archivo}")
+            archivos_generados.append(nombre_archivo)
+            
+        except Exception as e:
+            print(f"  ❌ Zona {zona}: Error - {e}")
+    
+    if archivos_generados:
+        print("  " + "─" * 66)
+        print(f"  ✅ {len(archivos_generados)} gráficas generadas en: output/")
+        print("  " + "═" * 66)
+        
+        # Preguntar si desea abrir las gráficas
+        respuesta = input("\n  ¿Deseas abrir las gráficas generadas? (si/no): ").strip().lower()
+        if respuesta in ['si', 's', 'yes', 'y']:
+            print("\n  🖼️  Abriendo gráficas...")
+            for archivo in archivos_generados:
+                ruta = os.path.join(OUTPUT_DIR, archivo)
+                try:
+                    os.startfile(ruta)
+                except Exception as e:
+                    print(f"  ⚠️  No se pudo abrir {archivo}: {e}")
+
+
+def generar_visualizaciones_historicos(gestor):
+    """
+    Genera visualizaciones Monte Carlo para todas las zonas con datos históricos.
+    
+    Parámetros
+    ----------
+    gestor : GestorHistoricos
+        Gestor de datos históricos
+    """
+    if gestor.datos is None:
+        return
+    
+    print("\n  📊 GENERANDO VISUALIZACIONES MONTE CARLO")
+    print("  " + "═" * 66)
+    print("  Simulando 1000 escenarios por zona basados en datos históricos...")
+    print("  " + "─" * 66)
+    
+    zonas = ['Norte', 'Sur', 'Este', 'Oeste']
+    archivos_generados = []
+    resultados_zonas = {}
+    
+    for zona in zonas:
+        stats = gestor.obtener_estadisticas(zona)
+        if not stats:
+            print(f"  ⚠️  Zona {zona}: Sin datos")
+            continue
+        
+        try:
+            # Generar visualización
+            nombre_archivo = f"historicos_{zona.lower()}_montecarlo.png"
+            ruta_archivo = os.path.join(OUTPUT_DIR, nombre_archivo)
+            
+            resultado = visualizar_simulaciones_montecarlo(
+                zona=zona,
+                estadisticas=stats,
+                num_simulaciones=1000,
+                mostrar=False,  # No mostrar en pantalla
+                guardar_path=ruta_archivo
+            )
+            
+            # Guardar resumen
+            resumen_robos = resultado['resumen'].get('robos', {})
+            resultados_zonas[zona] = {
+                'archivo': nombre_archivo,
+                'media_historica': resumen_robos.get('media_historica', 0),
+                'media_simulada': resumen_robos.get('media_simulacion', 0),
+                'std': resumen_robos.get('std_simulacion', 0)
+            }
+            
+            print(f"  ✓ {zona:6s} → {nombre_archivo}")
+            archivos_generados.append(nombre_archivo)
+            
+        except Exception as e:
+            print(f"  ❌ Zona {zona}: Error al generar visualización - {e}")
+    
+    if archivos_generados:
+        print("  " + "─" * 66)
+        print(f"\n  📈 COMPARACIÓN DE ROBOS POR ZONA (Simulación vs Histórico)")
+        print("  " + "─" * 66)
+        print(f"  {'Zona':8s} │ {'Histórico':>10s} │ {'Simulado':>10s} │ {'Desv.Std':>10s}")
+        print("  " + "─" * 66)
+        
+        for zona in sorted(resultados_zonas.keys()):
+            res = resultados_zonas[zona]
+            hist = res['media_historica']
+            sim = res['media_simulada']
+            std = res['std']
+            
+            # Indicador visual de diferencia
+            diff = abs(sim - hist)
+            indicador = "✓" if diff < 3 else "~" if diff < 5 else "!"
+            
+            print(f"  {zona:8s} │ {hist:10.1f} │ {sim:10.1f} │ {std:10.1f}  {indicador}")
+        
+        print("  " + "─" * 66)
+        print(f"  📁 Ubicación: {OUTPUT_DIR}")
+        print(f"  🎨 Archivos PNG: {len(archivos_generados)} zonas")
+        print("  " + "═" * 66)
+        
+        # Mensaje informativo
+        print(f"\n  💡 VISUALIZACIONES GENERADAS:")
+        print(f"     Cada gráfica muestra:")
+        print(f"     • 📊 Histogramas de 5 variables (Robos, Microtráfico, etc.)")
+        print(f"     • 🟨 Área sombreada = Rango histórico válido")
+        print(f"     • 🟢 Línea verde = Media histórica")
+        print(f"     • 🔵 Línea azul = Media simulada (Monte Carlo)")
+        print(f"     • 🔴 Líneas rojas = Límites min/max")
+        
+        # Preguntar si quiere abrir las imágenes
+        print(f"\n  ❓ ¿Deseas abrir las visualizaciones ahora?")
+        respuesta = input("     Escribe 'si' para ver las gráficas (Enter para continuar): ").strip().lower()
+        
+        if respuesta in ['si', 's', 'sí', 'yes', 'y']:
+            print(f"\n  🖼️  Abriendo visualizaciones...")
+            import webbrowser
+            import time
+            
+            for zona, res in resultados_zonas.items():
+                ruta = os.path.join(OUTPUT_DIR, res['archivo'])
+                if os.path.exists(ruta):
+                    try:
+                        # Abrir con el visor de imágenes predeterminado
+                        os.startfile(ruta)
+                        time.sleep(0.5)  # Pequeña pausa entre cada imagen
+                    except Exception as e:
+                        print(f"     ⚠️  No se pudo abrir {res['archivo']}: {e}")
+            
+            print(f"  ✓ Visualizaciones abiertas")
+        else:
+            print(f"\n  ℹ️  Puedes ver las gráficas más tarde en: {OUTPUT_DIR}")
+    
+    print()
 
 
 def solicitar_modo_analisis():
@@ -605,26 +784,44 @@ def main():
     try:
         # 1. Banner y obtener ciudad (Ambato por defecto)
         mostrar_banner()
-        ciudad = obtener_ciudad_ambato()
+        ciudad = obtener_ciudad_ambato()        # 2. Inicializar gestor de históricos y generar visualizaciones REALES
+        print(f"  📊 Cargando datos históricos...")
+        gestor = obtener_gestor()
+        if gestor.datos is not None:
+            print(gestor.generar_resumen())
+            
+            # Generar automáticamente visualizaciones de datos REALES (12 meses)
+            generar_visualizaciones_historicos_reales(gestor)
+        else:
+            print(f"  ⚠️  No se encontraron datos históricos (se usarán datos aleatorios)")
 
-        # 2. Seleccionar modo de análisis
+        # 3. Seleccionar modo de análisis
         modo = solicitar_modo_analisis()
 
-        # 3. Cargar mapa
+        # 4. Cargar mapa
         print(f"\n  🗺️  Iniciando análisis: {ciudad}")
         try:
             G, bbox = cargar_mapa(ciudad)
         except Exception as e:
             print(f"  ❌ Error descargando mapa: {e}")
             print("     Verifica tu conexión a internet.")
-            return
-
-        # 4. Construir grid
+            return        # 4. Construir grid
         print(f"  🔲 Generando grid {GRID_SIZE[0]}x{GRID_SIZE[1]}...")
         grid, zonas = construir_grid(G, bbox, filas=GRID_SIZE[0], columnas=GRID_SIZE[1])
         print(f"  ✅ {len(zonas)} zonas creadas")
+        
+        # 5. Configurar centro del mapa para división en macro-zonas
+        if gestor.datos is not None:
+            nodos = list(G.nodes(data=True))
+            if nodos:
+                lats = [data['y'] for _, data in nodos]
+                lons = [data['x'] for _, data in nodos]
+                centro_lat = sum(lats) / len(lats)
+                centro_lon = sum(lons) / len(lons)
+                gestor.configurar_centro_mapa(centro_lat, centro_lon)
+                print(f"  📍 Centro del mapa configurado: ({centro_lat:.4f}, {centro_lon:.4f})")
 
-        # 5. Ejecutar según el modo seleccionado
+        # 6. Ejecutar según el modo seleccionado
         if modo == '2':
             # ── MODO 2: Análisis de zona específica (con círculo) ──────────────
             fila_centro, columna_centro, zonas_circulo, radio = solicitar_zona(

@@ -20,6 +20,48 @@ Sistema inteligente para análisis de seguridad ciudadana en Ambato, Ecuador, ut
 6. **Regresión Logística** - Probabilidad de incidentes
 7. **Sistema de Reglas** - Motor de inferencia y diagnosis
 
+## 🎲 Simulación Monte Carlo
+
+Sistema de generación de datos sintéticos basados en datos históricos de 4 macro-zonas:
+
+- **📊 Datos históricos**: 240 registros (12 meses × 5 variables × 4 zonas)
+- **🎯 Macro-zonas**: Norte, Sur, Este, Oeste (división automática)
+- **🔢 Variables**: Robos, Microtráfico, Vandalismo, Accidentes, Llamadas 911
+- **📈 Visualización**: Histogramas y scatter plots de simulaciones
+
+### Visualización de Simulaciones
+
+```python
+from src.utils import obtener_gestor
+from src.algoritmos.montecarlo import visualizar_simulaciones_montecarlo
+
+# Cargar datos históricos
+gestor = obtener_gestor()
+stats = gestor.obtener_estadisticas('Norte')
+
+# Generar visualización
+resultado = visualizar_simulaciones_montecarlo(
+    zona='Norte',
+    estadisticas=stats,
+    num_simulaciones=1000,
+    guardar_path='simulacion.png'
+)
+```
+
+**🎨 Elementos visualizados:**
+- 📊 Histogramas de distribución
+- 🟨 Área sombreada del rango histórico
+- 🟢 Media histórica (línea verde)
+- 🔵 Media simulada (línea azul)
+- 🔴 Límites min/max históricos
+
+**📁 Scripts de ejemplo:**
+- `demo_visual.py` - Demostración rápida
+- `ejemplo_visualizacion_montecarlo.py` - Ejemplos completos
+- `test_visualizacion.py` - Tests automatizados
+
+Ver documentación completa: `docs/VISUALIZACION_MONTECARLO.md`
+
 ## 📁 Estructura del Proyecto
 
 ```

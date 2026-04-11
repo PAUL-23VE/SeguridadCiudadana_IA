@@ -1,6 +1,16 @@
 """
 Paquete utils - Utilidades y funciones auxiliares
 """
-from .datos import generar_grid, encontrar_zonas_riesgo
+from .historicos import (
+    GestorHistoricos,
+    obtener_gestor,
+    identificar_zona,
+    obtener_estadisticas_zona
+)
 
-__all__ = ['generar_grid', 'encontrar_zonas_riesgo']
+__all__ = [
+    'GestorHistoricos',
+    'obtener_gestor',
+    'identificar_zona',
+    'obtener_estadisticas_zona'
+]

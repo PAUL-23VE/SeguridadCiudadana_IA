@@ -2,13 +2,15 @@
 diagnostico.py
 ==============
 Modulo para diagnostico de zonas usando logica difusa, algoritmo genetico,
-Apriori, PRISM y analisis de conectividad urbana.
+Apriori, PRISM, analisis de conectividad urbana y simulacion Monte Carlo.
 """
 import numpy as np
 from ..algoritmos.difuso import clasificar_difuso, describir_membresia, graficar_membresia, TIPO_MEMBRESIA
 from ..algoritmos.genetico import optimizar_pesos
 from ..algoritmos.reglas import obtener_regla_explicativa
 from ..algoritmos.conectividad import analizar_conectividad_zona
+from ..algoritmos.montecarlo import generar_escenario_unico
+from ..utils.historicos import obtener_gestor, identificar_zona
 
 
 def _nombre_zona(fila, col, grid_shape=None, grid=None):
@@ -37,15 +39,42 @@ def diagnostico_masivo(grid, zonas, G=None):
     return resultados
 
 
-def diagnosticar_zona_silencioso(grid, fila, col, G=None, grid_shape=None):
+def diagnosticar_zona_silencioso(grid, fila, col, G=None, grid_shape=None, usar_historicos=True):
+    """Diagnóstico silencioso con soporte para datos históricos y Monte Carlo."""
     gs = grid_shape or (grid.shape if hasattr(grid, 'shape') else (30, 30))
-    datos = {
-        'robos':                np.random.randint(0, 100),
-        'microtrafico':         np.random.randint(0, 50),
-        'vandalismo':           np.random.randint(0, 80),
-        'accidentes':           np.random.randint(0, 60),
-        'llamadas_emergencias': np.random.randint(0, 100),
-    }
+    
+    # Obtener coordenadas de la zona
+    clat = grid[fila, col]['lat']
+    clon = grid[fila, col]['lon']
+    
+    # Determinar datos de entrada
+    if usar_historicos:
+        gestor = obtener_gestor()
+        zona_macro = identificar_zona(clat, clon)
+        stats = gestor.obtener_estadisticas(zona_macro)
+        
+        if stats:
+            # Usar Monte Carlo para generar datos basados en históricos
+            datos = generar_escenario_unico(zona_macro, stats)
+        else:
+            # Fallback: datos aleatorios
+            datos = {
+                'robos':                np.random.randint(0, 100),
+                'microtrafico':         np.random.randint(0, 50),
+                'vandalismo':           np.random.randint(0, 80),
+                'accidentes':           np.random.randint(0, 60),
+                'llamadas_emergencias': np.random.randint(0, 100),
+            }
+    else:
+        # Datos aleatorios (modo original)
+        datos = {
+            'robos':                np.random.randint(0, 100),
+            'microtrafico':         np.random.randint(0, 50),
+            'vandalismo':           np.random.randint(0, 80),
+            'accidentes':           np.random.randint(0, 60),
+            'llamadas_emergencias': np.random.randint(0, 100),
+        }
+    
     metricas = {
         'densidad_calles':         np.random.uniform(0, 500),
         'densidad_intersecciones': np.random.uniform(0, 300),
@@ -53,8 +82,6 @@ def diagnosticar_zona_silencioso(grid, fila, col, G=None, grid_shape=None):
     pesos        = optimizar_pesos(datos, silencioso=True)
     nivel, score = clasificar_difuso(datos, metricas, pesos)
     if G is not None:
-        clat  = grid[fila, col]['lat']
-        clon  = grid[fila, col]['lon']
         ci    = analizar_conectividad_zona(G, clat, clon)
         score = score * (1 + ci['factor_riesgo']) / 2
         nivel = 'Bajo' if score < 33 else 'Medio' if score < 66 else 'Alto'
@@ -69,7 +96,8 @@ def diagnosticar_zona_silencioso(grid, fila, col, G=None, grid_shape=None):
     }
 
 
-def diagnosticar_zona(grid, fila, col, G=None, grid_shape=None):
+def diagnosticar_zona(grid, fila, col, G=None, grid_shape=None, usar_historicos=True):
+    """Diagnóstico detallado con soporte para datos históricos."""
     gs     = grid_shape or (grid.shape if hasattr(grid, 'shape') else (30, 30))
     nombre = _nombre_zona(fila, col, gs, grid)
     sep    = chr(9472) * 60
@@ -78,14 +106,47 @@ def diagnosticar_zona(grid, fila, col, G=None, grid_shape=None):
     print(f'  DIAGNOSTICO DE ZONA [{fila},{col}]')
     print(f'  Barrio/Sector: {nombre}')
     print(sep)
-    datos = {
-        'robos':                np.random.randint(0, 100),
-        'microtrafico':         np.random.randint(0, 50),
-        'vandalismo':           np.random.randint(0, 80),
-        'accidentes':           np.random.randint(0, 60),
-        'llamadas_emergencias': np.random.randint(0, 100),
-    }
-    metricas = {        'densidad_calles':         np.random.uniform(0, 500),
+    
+    # Obtener coordenadas de la zona
+    clat = grid[fila, col]['lat']
+    clon = grid[fila, col]['lon']
+    
+    # Determinar macro-zona y cargar datos históricos
+    zona_macro = None
+    if usar_historicos:
+        gestor = obtener_gestor()
+        zona_macro = identificar_zona(clat, clon)
+        stats = gestor.obtener_estadisticas(zona_macro)
+        
+        print(f'  Macro-Zona: {zona_macro} (basado en coordenadas)')
+        
+        if stats:
+            # Usar Monte Carlo para generar datos basados en históricos
+            datos = generar_escenario_unico(zona_macro, stats)
+            print(f'  Datos generados con Monte Carlo (históricos {zona_macro})')
+        else:
+            # Fallback: datos aleatorios
+            datos = {
+                'robos':                np.random.randint(0, 100),
+                'microtrafico':         np.random.randint(0, 50),
+                'vandalismo':           np.random.randint(0, 80),
+                'accidentes':           np.random.randint(0, 60),
+                'llamadas_emergencias': np.random.randint(0, 100),
+            }
+            print(f'  Datos aleatorios (sin históricos disponibles)')
+    else:
+        # Datos aleatorios (modo original)
+        datos = {
+            'robos':                np.random.randint(0, 100),
+            'microtrafico':         np.random.randint(0, 50),
+            'vandalismo':           np.random.randint(0, 80),
+            'accidentes':           np.random.randint(0, 60),
+            'llamadas_emergencias': np.random.randint(0, 100),
+        }
+        print(f'  Datos aleatorios (modo sin históricos)')
+    
+    metricas = {
+        'densidad_calles':         np.random.uniform(0, 500),
         'densidad_intersecciones': np.random.uniform(0, 300),
     }
     print(f'\n  PASO 1: DATOS DE ENTRADA')
