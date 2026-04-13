@@ -28,6 +28,7 @@ try:
     from src.algoritmos.difuso import mantener_graficas_abiertas
     from src.utils.historicos import obtener_gestor
     from src.algoritmos.montecarlo import visualizar_simulaciones_montecarlo
+    from src.utils.reporte import generar_reporte_html
 except ImportError as e:
     print(f"❌ Error al importar módulos: {e}")
     print("   Verifica que la estructura del proyecto esté correcta.")
@@ -782,21 +783,38 @@ def _esperar_cierre_graficas():
 def main():
     """Función principal del sistema."""
     try:
+        # Diccionario para recopilar datos del reporte
+        datos_reporte = {
+            'ciudad': '',
+            'modo': '',
+            'total_zonas': 0,
+            'zonas_alto': 0,
+            'zonas_medio': 0,
+            'zonas_bajo': 0,
+            'datos_historicos': {},
+            'montecarlo': {},
+            'detalles_zonas': [],
+            'info_circulo': None
+        }
+        
         # 1. Banner y obtener ciudad (Ambato por defecto)
         mostrar_banner()
-        ciudad = obtener_ciudad_ambato()        # 2. Inicializar gestor de históricos y generar visualizaciones REALES
+        ciudad = obtener_ciudad_ambato()
+        datos_reporte['ciudad'] = ciudad        # 2. Inicializar gestor de históricos y generar visualizaciones REALES
         print(f"  📊 Cargando datos históricos...")
         gestor = obtener_gestor()
         if gestor.datos is not None:
             print(gestor.generar_resumen())
             
+            # Guardar datos históricos en el reporte
+            datos_reporte['datos_historicos'] = gestor.estadisticas
+            
             # Generar automáticamente visualizaciones de datos REALES (12 meses)
             generar_visualizaciones_historicos_reales(gestor)
         else:
-            print(f"  ⚠️  No se encontraron datos históricos (se usarán datos aleatorios)")
-
-        # 3. Seleccionar modo de análisis
+            print(f"  ⚠️  No se encontraron datos históricos (se usarán datos aleatorios)")        # 3. Seleccionar modo de análisis
         modo = solicitar_modo_analisis()
+        datos_reporte['modo'] = 'Análisis de Zona Circular' if modo == '2' else 'Análisis Completo'
 
         # 4. Cargar mapa
         print(f"\n  🗺️  Iniciando análisis: {ciudad}")
@@ -809,8 +827,7 @@ def main():
         print(f"  🔲 Generando grid {GRID_SIZE[0]}x{GRID_SIZE[1]}...")
         grid, zonas = construir_grid(G, bbox, filas=GRID_SIZE[0], columnas=GRID_SIZE[1])
         print(f"  ✅ {len(zonas)} zonas creadas")
-        
-        # 5. Configurar centro del mapa para división en macro-zonas
+          # 5. Configurar centro del mapa para división en macro-zonas
         if gestor.datos is not None:
             nodos = list(G.nodes(data=True))
             if nodos:
@@ -827,7 +844,7 @@ def main():
             fila_centro, columna_centro, zonas_circulo, radio = solicitar_zona(
                 GRID_SIZE, G, grid, ciudad
             )
-
+            
             print(f"\n{'='*70}")
             print(f"  🔍 ANÁLISIS DE ZONA CIRCULAR")
             print(f"  📍 Centro: [{fila_centro},{columna_centro}]")
@@ -849,7 +866,27 @@ def main():
             alto  = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'alto')
             medio = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'medio')
             bajo  = sum(1 for r in resultados_circulo.values() if r['nivel'].lower() == 'bajo')
-
+            
+            # Guardar en datos_reporte
+            datos_reporte['total_zonas'] = total
+            datos_reporte['zonas_alto'] = alto
+            datos_reporte['zonas_medio'] = medio
+            datos_reporte['zonas_bajo'] = bajo
+            datos_reporte['info_circulo'] = {
+                'fila': fila_centro,
+                'columna': columna_centro,
+                'radio': radio
+            }
+              # Guardar detalles de zonas
+            for (fi, co), r in resultados_circulo.items():
+                datos_reporte['detalles_zonas'].append({
+                    'fila': fi,
+                    'columna': co,
+                    'nombre': r.get('nombre', f'Zona [{fi},{co}]'),
+                    'nivel': r['nivel'],
+                    'factores': r['factores']
+                })
+            
             print(f"  📍 Centro del círculo: [{fila_centro},{columna_centro}]")
             print(f"  📏 Radio analizado: {radio} metros")
             print(f"  📊 {total} zonas analizadas:")
@@ -858,7 +895,7 @@ def main():
             print(f"     🟢 Bajo riesgo:  {bajo:>3} zonas ({bajo/total*100:>5.1f}%)")
             print(f"\n  Detalle por zona:")
             print(f"  {'─'*72}")
-
+            
             import re as _re
             for (fi, co), r in sorted(resultados_circulo.items()):
                 icono = '🔴' if r['nivel'].lower() == 'alto' else ('🟡' if r['nivel'].lower() == 'medio' else '🟢')
@@ -876,7 +913,7 @@ def main():
             print(f"\n  🧠 Ejecutando algoritmos de IA...")
             resultados = diagnostico_masivo(grid, zonas, G)
             print(f"  ✅ Análisis completado")
-
+            
             print(f"\n  🗺️  Generando mapa HTML...")
             nombre_archivo = f"mapa_{ciudad.replace(', ', '_').replace(' ', '_')}.html"
             ruta_mapa = os.path.join(OUTPUT_DIR, nombre_archivo)
@@ -886,16 +923,86 @@ def main():
             bajo  = sum(1 for r in resultados.values() if r['nivel'].lower() == 'bajo')
             medio = sum(1 for r in resultados.values() if r['nivel'].lower() == 'medio')
             alto  = sum(1 for r in resultados.values() if r['nivel'].lower() == 'alto')
-
+            
+            # Guardar en datos_reporte
+            datos_reporte['total_zonas'] = total
+            datos_reporte['zonas_alto'] = alto
+            datos_reporte['zonas_medio'] = medio
+            datos_reporte['zonas_bajo'] = bajo
+              # Guardar detalles de zonas (primeras 50 para no sobrecargar)
+            for (i, j), r in list(resultados.items())[:50]:
+                datos_reporte['detalles_zonas'].append({
+                    'fila': i,
+                    'columna': j,
+                    'nombre': r.get('nombre', f'Zona [{i},{j}]'),
+                    'nivel': r['nivel'],
+                    'factores': r['factores']
+                })
+            
             print(f"\n  📊 RESUMEN:")
             print(f"     🔴 Alto:  {alto:>3} zonas ({alto/total*100:>5.1f}%)")
             print(f"     🟡 Medio: {medio:>3} zonas ({medio/total*100:>5.1f}%)")
             print(f"     🟢 Bajo:  {bajo:>3} zonas ({bajo/total*100:>5.1f}%)")
             print(f"\n  🎉 Mapa guardado: {ruta_mapa}")
             print(f"  ✅ Análisis completado exitosamente!\n")
-
             mantener_graficas_abiertas()
 
+        # ── GENERAR REPORTE HTML CON TODAS LAS ESTADÍSTICAS ──────────────────
+        print(f"\n{'='*70}")
+        print(f"  📄 GENERANDO REPORTE HTML CON ESTADÍSTICAS")
+        print(f"{'='*70}")
+        
+        try:
+            # Recopilar datos de Monte Carlo si existen
+            if gestor.datos is not None:
+                from src.algoritmos.montecarlo import generar_datos_zona
+                import numpy as np
+                
+                for zona in ['Norte', 'Sur', 'Este', 'Oeste']:
+                    stats = gestor.obtener_estadisticas(zona)
+                    if stats:
+                        try:
+                            simulaciones = generar_datos_zona(zona, stats, 1000)
+                            if simulaciones:
+                                robos_vals = [s.get('robos', 0) for s in simulaciones]
+                                datos_reporte['montecarlo'][zona] = {
+                                    'media_historica': stats.get('Robos', {}).get('media', 0),
+                                    'media_simulada': np.mean(robos_vals),
+                                    'std': np.std(robos_vals)
+                                }
+                        except Exception as e:
+                            print(f"  ⚠️  Error al simular {zona}: {e}")
+            
+            # Generar el reporte
+            from datetime import datetime
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            nombre_reporte = f"reporte_{ciudad.replace(', ', '_').replace(' ', '_')}_{timestamp}.html"
+            ruta_reporte = os.path.join(OUTPUT_DIR, nombre_reporte)
+            
+            generar_reporte_html(datos_reporte, ruta_reporte)
+            
+            print(f"\n  ✅ REPORTE GENERADO EXITOSAMENTE!")
+            print(f"  📁 Ubicación: {ruta_reporte}")
+            print(f"\n  📊 Contenido del reporte:")
+            print(f"     • Resumen de clasificación de riesgo")
+            print(f"     • Datos históricos por macro-zona")
+            print(f"     • Simulación Monte Carlo")
+            print(f"     • Detalle de {len(datos_reporte['detalles_zonas'])} zonas analizadas")
+            print(f"     • Gráficos y estadísticas visuales")
+            print(f"{'='*70}\n")
+            
+            # Abrir automáticamente en el navegador
+            print(f"  🌐 Abriendo reporte en el navegador...")
+            import webbrowser
+            ruta_absoluta = os.path.abspath(ruta_reporte)
+            webbrowser.open('file:///' + ruta_absoluta.replace('\\', '/'))
+            print(f"  ✓ Reporte abierto\n")
+            
+        except Exception as e:
+            print(f"\n  ⚠️  No se pudo generar el reporte: {e}")
+            import traceback
+            traceback.print_exc()
+        
         # ── BLOQUEO FINAL: mantiene el proceso vivo mientras haya gráficas ────
         # Se ejecuta para AMBOS modos (modo 1 y modo 2).
         _esperar_cierre_graficas()
