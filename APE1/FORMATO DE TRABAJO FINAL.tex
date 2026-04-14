@@ -14,10 +14,13 @@
 \usepackage{fancyhdr}
 \usepackage{booktabs}
 \usepackage{array}
+\usepackage{tabularx}
 \usepackage{longtable}
 \usepackage{multirow}
 \usepackage{float}
+\usepackage{tikz}
 \usepackage[hidelinks]{hyperref}
+\usetikzlibrary{arrows.meta, calc, positioning, shapes.geometric, shapes.multipart}
 \pagestyle{fancy}
 \fancyhf{} 
 \setlength{\headheight}{65pt}  
@@ -39,18 +42,15 @@
 
 \section{PORTADA}
 
-\begin{tabbing}
-\textbf{Tema:}\hspace{1cm} \= Guía APE 1: Diagnóstico de Zonas de Riesgo Urbano\\
-\> mediante Aprendizaje Basado en Reglas, Lógica Difusa\\
-\> y Algoritmos Genéticos\\
-\textbf{Carrera:}\hspace{1cm} \= Ingeniería de Software \\
-\textbf{Unidad de Organización Curricular:} \hspace{1cm} \= PROFESIONAL \\
-\textbf{Nivel y Paralelo:} \> Séptimo semestre A \\
-\textbf{Alumnos participantes:} \> Velastegui Paul \\
-\> Manjarres David \\
-\textbf{Asignatura:} \> Inteligencia Artificial \\
-\textbf{Docente:} \> Ing. Nogales Ruben, Mg.
-\end{tabbing}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries\raggedright\arraybackslash}p{4.9cm}>{\raggedright\arraybackslash}X@{}}
+Tema: & Guía APE 1: Diagnóstico de Zonas de Riesgo Urbano\\mediante Aprendizaje Basado en Reglas, Lógica Difusa\\y Algoritmos Genéticos \\
+Carrera: & Ingeniería de Software \\
+Unidad de Organización\\Curricular: & PROFESIONAL \\
+Nivel y Paralelo: & Séptimo semestre A \\
+Alumnos participantes: & Velastegui Paul \newline Manjarres David \\
+Asignatura: & Inteligencia Artificial \\
+Docente: & Ing. Nogales Ruben, Mg. \\
+\end{tabularx}
 
 \section{INFORME DE GUÍA PRÁCTICA}
 \titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
@@ -90,7 +90,8 @@ Listado de equipos y materiales generales empleados en la guía práctica:\\
 \begin{itemize}
     \item Computador personal con sistema operativo Windows/Linux/macOS
     \item Python 3.8 o superior
-    \item Librerías principales utilizadas en el código: OSMnx, NetworkX, NumPy, Pandas, Folium y Matplotlib
+    \item Librerías principales utilizadas en el código: OSMnx, NetworkX, NumPy, Pandas, SciPy, Folium y Matplotlib
+    \item Soporte \texttt{tkinter/Tk} para el modo de diagnóstico detallado con interfaz gráfica
     \item Editor de código (Visual Studio Code)
     \item Internet
     \item Datos históricos del sistema (archivo CSV por macro-zonas)
@@ -145,7 +146,7 @@ El presente trabajo integra técnicas de Inteligencia Artificial para el anális
 \subsection{Introducción}
 % -----------------------------------------------------------
 
-La seguridad ciudadana constituye uno de los pilares fundamentales del bienestar social en cualquier entorno urbano. En ciudades intermedias de Ecuador como Ambato, la creciente complejidad de los fenómenos delictivos y la heterogeneidad espacial de los incidentes hacen que los enfoques tradicionales de diagnóstico, basados en reportes manuales o estadísticas agregadas sin desagregación geográfica, resulten insuficientes para orientar la toma de decisiones ejecutiva con la precisión y la oportunidad requeridas \cite{b1}.
+La seguridad ciudadana constituye uno de los pilares fundamentales del bienestar social en cualquier entorno urbano. En ciudades intermedias de Ecuador como Ambato, la creciente complejidad de los fenómenos delictivos y la heterogeneidad espacial de los incidentes hacen que los enfoques tradicionales de diagnóstico, basados en reportes manuales o estadísticas agregadas sin desagregación geográfica, resulten insuficientes para orientar la toma de decisiones ejecutiva con la precisión y la oportunidad requeridas.
 
 Ante esta problemática, la Inteligencia Artificial (IA) ofrece un conjunto de herramientas metodológicas capaces de procesar volume\-nes de información heterogénea, capturar la imprecisión inherente a los conceptos de riesgo y generar diagnósticos reproducibles y auditables. En particular, tres paradigmas complementarios resultan especialmente idóneos para este dominio:
 
@@ -166,8 +167,8 @@ Este proyecto integra dichos paradigmas en un flujo de procesamiento unificado, 
 Los datos empleados en la simulación provienen de dos fuentes complementarias:
 
 \begin{itemize}
-    \item \textbf{Datos históricos de incidentes (CSV):} Registro mensual de cinco categorías de incidentes delictivos para cuatro macro-zonas de la ciudad de Ambato (Norte, Sur, Este y Oeste), con una extensión de 12 meses. Este dataset fue construido con base en estadísticas de seguridad ciudadana disponibles para la realidad ecuatoriana, sistematizadas por macro-zona para reflejar las dinámicas espaciales propias de la ciudad.
-    \item \textbf{Grafo vial de OpenStreetMap (OSM):} Información geográfica real de la red vial de Ambato, descargada mediante la librería OSMnx \cite{b10}. El grafo resultante contiene aproximadamente 3.000–5.000 intersecciones (nodos) y 8.000–12.000 segmentos de calle (aristas), y provee la base cartográfica sobre la que se superponen los diagnósticos de riesgo.
+    \item \textbf{Datos históricos de incidentes (CSV):} Archivo tabular de trabajo incluido en el repositorio, con registro mensual de cinco categorías de incidentes para cuatro macro-zonas de la ciudad de Ambato (Norte, Sur, Este y Oeste) a lo largo de 12 meses. Este archivo funciona como base histórica interna del prototipo y no se encuentra enlazado en tiempo real con una fuente institucional externa.
+    \item \textbf{Grafo vial de OpenStreetMap (OSM):} Información geográfica real de la red vial de Ambato, descargada mediante la librería OSMnx \cite{b10}. El grafo resultante aporta la base cartográfica sobre la que se superponen los diagnósticos de riesgo y, dependiendo de la fecha de descarga y del recorte espacial, puede contener miles de intersecciones (nodos) y segmentos de calle (aristas).
 \end{itemize}
 
 \subsubsection{Variables Consideradas y Justificación}
@@ -180,15 +181,15 @@ El sistema emplea cinco variables de entrada correspondientes a categorías de i
         \toprule
         \textbf{Variable} & \textbf{Unidad} & \textbf{Justificación} \\
         \midrule
-        Robos & casos/mes & Indicador directo de delincuencia patrimonial. Es la variable con mayor impacto percibido sobre la sensación de inseguridad ciudadana \cite{b9}. \\
-        Microtráfico & casos/mes & Asociado con la instalación de redes delictivas en zonas específicas. Su presencia correlaciona con el incremento de otras modalidades delictivas \cite{b9}. \\
-        Vandalismo & casos/mes & Indicador de deterioro del entorno urbano y pérdida de control social informal. Proxy de zonas con baja cohesión comunitaria. \\
-        Accidentes viales & casos/mes & Refleja tanto la peligrosidad vial como la presencia de conductas de riesgo (conducción bajo efectos de sustancias). \\
-        Llamadas al 911 & llamadas/mes & Indicador de demanda de intervención del Estado. Integra percepción subjetiva y eventos objetivos de inseguridad. \\
+        Robos & casos/mes & Indicador directo de delincuencia patrimonial y variable de referencia básica dentro del diagnóstico implementado. \\
+        Microtráfico & casos/mes & Variable asociada a presión delictiva localizada y empleada como señal complementaria dentro del modelo. \\
+        Vandalismo & casos/mes & Indicador de deterioro del entorno urbano y de conflictividad visible en el espacio público. \\
+        Accidentes viales & casos/mes & Variable de contexto incluida en el prototipo para capturar eventos críticos que también afectan la percepción de riesgo urbano. \\
+        Llamadas al 911 & llamadas/mes & Indicador agregado de demanda de atención y reporte ciudadano ante eventos problemáticos. \\
         \bottomrule
     \end{tabular}
     \caption{Variables de entrada del sistema de diagnóstico}
-    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en literatura especializada.}
+    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en las variables implementadas en el sistema.}
 \end{table}
 
 La elección de estas cinco variables responde a la disponibilidad de datos históricos sistematizados, a su relevancia como indicadores de riesgo en la literatura de seguridad urbana, y a su capacidad de ser fuzzificadas dentro de universos de discurso bien definidos. Variables como la densidad poblacional o el nivel socioeconómico, aunque relevantes, se excluyeron por la dificultad de obtener datos desagregados con la granularidad espacial requerida.
@@ -203,7 +204,7 @@ El archivo CSV de históricos contiene 48 filas: 12 meses para cada una de las 4
 
 \subsubsection{Categorías Lingüísticas y Funciones de Membresía}
 
-La clasificación difusa implementada en \texttt{src/algoritmos/difuso.py} no utiliza \texttt{scikit-fuzzy} ni una base de reglas Mamdani clásica con antecedentes y consecuentes explícitos. La implementación real calcula directamente tres grados de pertenencia globales (bajo, medio y alto) a partir de las cinco variables de incidentes y de los pesos generados por el algoritmo genético.
+La clasificación difusa implementada en \texttt{src/algoritmos/difuso.py} no utiliza \texttt{scikit-fuzzy} ni una base de reglas Mamdani clásica con antecedentes y consecuentes explícitos \cite{b7}. La implementación real calcula directamente tres grados de pertenencia globales (bajo, medio y alto) a partir de las cinco variables de incidentes y de los pesos generados por el algoritmo genético.
 
 Antes de evaluar la membresía, cada variable se normaliza respecto a un máximo fijo de dominio:
 
@@ -260,14 +261,24 @@ La salida intermedia del clasificador se obtiene agregando de forma ponderada lo
     \mu_{alto}  = \sum_{v=1}^{5} w_v \cdot \mu_{alto}^{(v)}(x_v')
 \end{equation}
 
-El puntaje numérico se calcula mediante una defuzzificación simplificada por centros representativos fijos:
+El puntaje numérico ya no se calcula únicamente mediante una combinación ponderada de centros fijos. La versión actual del código define funciones de membresía del consecuente para \textit{riesgo bajo}, \textit{medio} y \textit{alto} sobre el dominio de salida $[0,100]$, las trunca con los grados $\mu_{bajo}$, $\mu_{medio}$ y $\mu_{alto}$, las agrega con el operador máximo y calcula el centroide discreto del área resultante:
 
 \begin{equation}
-    score = \frac{16.5 \cdot \mu_{bajo} + 50 \cdot \mu_{medio} + 83.5 \cdot \mu_{alto}}
-    {\mu_{bajo} + \mu_{medio} + \mu_{alto}}
+    \mu_{agg}(x) = \max \left(
+    \min(\mu_{bajo}, \mu_{cons,bajo}(x)),
+    \min(\mu_{medio}, \mu_{cons,medio}(x)),
+    \min(\mu_{alto}, \mu_{cons,alto}(x))
+    \right)
 \end{equation}
 
-La etiqueta devuelta por el clasificador difuso se asigna al mayor de los tres grados agregados. En la implementación actual, el parámetro \texttt{metricas} existe en la firma de la función, pero no interviene en el cálculo del \texttt{score}; el diagnóstico depende únicamente de las cinco variables de incidentes y de los pesos optimizados.
+\begin{equation}
+    score = \frac{\sum_{x \in U} x \, \mu_{agg}(x)}{\sum_{x \in U} \mu_{agg}(x)},
+    \qquad U = \{0,1,\dots,100\}
+\end{equation}
+
+Solo si el área agregada es nula, el código usa como respaldo la defuzzificación por centros representativos fijos $(16.5, 50, 83.5)$.
+
+La etiqueta devuelta por el clasificador difuso se asigna al mayor de los tres grados agregados. En la implementación actual, el parámetro \texttt{metricas} existe en la firma de la función, pero no interviene en el cálculo del \texttt{score}; el diagnóstico depende únicamente de las cinco variables de incidentes y de los pesos optimizados. Cuando posteriormente se aplica el ajuste por conectividad, el nivel final ya no se toma del máximo grado difuso, sino de la discretización del \texttt{score} ajustado con los umbrales 33 y 66.
 
 \subsubsection{Reglas Explicativas Apriori y PRISM}
 
@@ -441,7 +452,7 @@ El sistema se organiza en cuatro capas de procesamiento que implementan separaci
 \begin{enumerate}
     \item \textbf{Capa de Entrada:} Ingesta y validación de datos de dos fuentes — grafo vial OSM y dataset CSV histórico.
     \item \textbf{Capa de Procesamiento Espacial:} Construcción de la grilla urbana $30 \times 30$ y asignación de nombres de barrios mediante geocodificación inversa.
-    \item \textbf{Capa de IA:} Pipeline de procesamiento para cada celda: escenario Monte Carlo → optimización genética de pesos → clasificación difusa → ajuste por conectividad → regla explicativa.
+    \item \textbf{Capa de IA:} Pipeline operativo por celda: escenario Monte Carlo → optimización genética de pesos → clasificación difusa → ajuste por conectividad y generación de explicación textual.
     \item \textbf{Capa de Salida:} Generación de mapas HTML, gráficas PNG de históricos y Monte Carlo, y reporte HTML consolidado.
 \end{enumerate}
 
@@ -480,9 +491,11 @@ Para cada una de las 900 celdas de la grilla $30 \times 30$, el sistema ejecuta 
     \item Ejecutar el algoritmo genético para obtener un vector de pesos $\mathbf{w}$ específico para la evaluación actual.
     \item Aplicar el clasificador difuso y obtener \texttt{nivel} y \texttt{score}.
     \item Si existe grafo vial cargado, analizar conectividad mediante BFS en radio de 500 m y reajustar el score.
-    \item Identificar los dos factores con mayor valor y obtener una regla explicativa Apriori o PRISM según el nivel final.
+    \item Identificar los dos factores con mayor valor y registrar una regla explicativa Apriori o PRISM.
     \item Almacenar el diagnóstico y, según el modo de uso, incorporarlo a mapas HTML, consola y reporte.
 \end{enumerate}
+
+En la ejecución masiva, la regla explicativa se calcula después del ajuste por conectividad. En cambio, el diagnóstico detallado mostrado por consola la imprime antes de recalcular el nivel final con conectividad. Por ello, la regla textual debe interpretarse como un apoyo descriptivo del proceso y no como una justificación garantizada del nivel definitivo en todos los modos de uso.
 
 \subsubsection{Configuración Centralizada}
 
@@ -515,7 +528,7 @@ El módulo \texttt{config.py} concentra rutas, colores y varios parámetros decl
 
 \subsubsection{Simulación Monte Carlo}
 
-La simulación Monte Carlo implementada en \texttt{src/algoritmos/montecarlo.py} se basa en muestreo normal acotado por los valores históricos mínimos y máximos de cada macro-zona. Para una variable $j$, el valor simulado se genera como:
+La simulación Monte Carlo implementada en \texttt{src/algoritmos/montecarlo.py} se basa en muestreo normal acotado por los valores históricos mínimos y máximos de cada macro-zona \cite{b3}. Para una variable $j$, el valor simulado se genera como:
 
 \begin{equation}
     X_j = \operatorname{clip}\!\left(\mathcal{N}(\mu_j^{zona}, \sigma_j^{zona}),\; min_j^{zona},\; max_j^{zona}\right)
@@ -526,8 +539,8 @@ En la ejecución operativa del diagnóstico por celda se utiliza un \textbf{solo
 Esto permite:
 \begin{itemize}
     \item producir escenarios sintéticos consistentes con los rangos históricos;
-    \item comparar visualmente medias, mínimos y máximos históricos frente a simulaciones;
-    \item generar histogramas y resúmenes por macro-zona para el reporte.
+    \item comparar visualmente mínimos, medias y máximos históricos frente a simulaciones mediante barras agrupadas;
+    \item generar resúmenes comparativos por macro-zona en consola y, en el reporte HTML actual, un resumen centrado en la variable robos.
 \end{itemize}
 
 \subsubsection{Análisis de Conectividad BFS}
@@ -562,7 +575,7 @@ El sistema implementa las siguientes operaciones sobre el grafo OSM:
 \subsection{Análisis de Resultados}
 % -----------------------------------------------------------
 
-\subsubsection{Distribución de Riesgo por Macro-Zona}
+\subsubsection{Distribución de Riesgo en la Ejecución}
 
 Tras la ejecución del sistema sobre la grilla completa o sobre una zona circular, el programa resume el número de celdas clasificadas como \textit{Bajo}, \textit{Medio} y \textit{Alto}. Debido a que el pipeline incorpora generación aleatoria de escenarios Monte Carlo y un algoritmo genético sin semilla fija, estas proporciones pueden variar entre ejecuciones. En consecuencia, el código no garantiza porcentajes estáticos por macro-zona; lo que sí produce de forma consistente es un conteo agregado de niveles y un detalle por zona analizada.
 
@@ -575,7 +588,7 @@ El algoritmo genético optimiza los pesos de ponderación de las variables a lo 
 La coherencia con los datos históricos se observa en dos niveles implementados en el código:
 \begin{itemize}
     \item comparación visual entre medias, mínimos y máximos históricos y simulados en las gráficas Monte Carlo;
-    \item resumen numérico de medias históricas y simuladas, especialmente para la variable de robos, dentro del reporte HTML y de la salida por consola.
+    \item resumen numérico de medias históricas y simuladas para la variable de robos dentro del reporte HTML actual y de la salida por consola.
 \end{itemize}
 
 No se implementan actualmente métricas automáticas como correlación de Spearman, intervalos de credibilidad bayesianos ni cobertura sistemática de las reglas explicativas generadas.
@@ -586,9 +599,9 @@ El sistema produce los siguientes artefactos digitales:
 
 \begin{itemize}
     \item \textbf{Mapa HTML interactivo (Folium):} Cada celda se representa con un \texttt{CircleMarker} coloreado según su nivel de riesgo e incluye un \textit{popup} con factores principales y regla explicativa.
-    \item \textbf{Gráficas PNG de datos históricos reales:} El programa exporta visualizaciones de los 12 meses del CSV para las cuatro macro-zonas.
-    \item \textbf{Gráficas PNG de Monte Carlo:} Histogramas por variable y macro-zona comparando distribuciones históricas y sintéticas (1000 simulaciones para visualización).
-    \item \textbf{Reporte HTML consolidado:} Resume conteos por nivel, datos históricos, estadísticas Monte Carlo y detalle de zonas analizadas.
+    \item \textbf{Gráficas PNG de series históricas del CSV:} El programa exporta curvas suaves de distribución para los 12 meses del archivo histórico, mostrando media, rango mínimo--máximo y zona $\pm 1\sigma$ para las cuatro macro-zonas.
+    \item \textbf{Gráficas PNG de Monte Carlo:} Barras agrupadas por variable y macro-zona comparando mínimos, medias y máximos históricos frente a los valores simulados (1000 simulaciones para visualización).
+    \item \textbf{Reporte HTML consolidado:} Resume conteos por nivel, tablas históricas por macro-zona, una comparación Monte Carlo resumida por zona sobre la variable robos y el detalle de zonas analizadas.
     \item \textbf{Salida por consola:} Presenta trazabilidad paso a paso del diagnóstico detallado cuando se analiza una zona o un conjunto circular.
 \end{itemize}
 
@@ -601,7 +614,9 @@ El sistema produce los siguientes artefactos digitales:
     \item \textbf{Ausencia de validación de campo:} Los diagnósticos generados por el sistema no han sido contrastados sistemáticamente con datos de intervención policial real ni con la percepción de los habitantes de cada barrio. Sin esta validación, el sistema constituye un insumo de apoyo a la decisión, no una verdad operacional.
     \item \textbf{Simplificación de la realidad urbana:} La discretización en una grilla regular $30 \times 30$ ignora la heterogeneidad interna de las celdas, que pueden contener microentornos con dinámicas muy distintas (zonas comerciales vs. residenciales dentro de la misma celda).
     \item \textbf{Dependencia de conectividad a OpenStreetMap:} La descarga del grafo vial requiere acceso a internet al momento de ejecución. En redes inestables, esto puede interrumpir el procesamiento o generar grafos incompletos.
+    \item \textbf{Dependencia de entorno gráfico para el modo detallado:} El modo 2 del sistema requiere \texttt{tkinter/Tk} para abrir la interfaz interactiva de selección de zona. Si este soporte no está disponible, el programa redirige automáticamente al modo 1 con backend gráfico no interactivo.
     \item \textbf{Reglas explicativas no condicionadas por la celda actual:} Apriori y PRISM se ejecutan sobre un dataset sintético interno generado en el propio módulo de reglas, por lo que la explicación textual no surge directamente del historial particular de la celda analizada.
+    \item \textbf{Desalineación puntual entre regla y nivel final en modo detallado:} En el diagnóstico paso a paso, la regla explicativa se imprime antes del ajuste final por conectividad. Si dicho ajuste modifica el nivel, el texto mostrado puede no coincidir exactamente con la clasificación definitiva.
     \item \textbf{Variables auxiliares no integradas al score difuso:} El pipeline genera métricas de densidad vial e intersecciones, pero estas no participan en el cálculo del clasificador difuso actual.
     \item \textbf{Síntesis de características desde distribución normal:} El muestreo Monte Carlo asume que los incidentes siguen una distribución normal por macro-zona, lo cual puede ser inexacto para variables con distribuciones sesgadas o bimodales (por ejemplo, robos con alta variabilidad estacional).
     \item \textbf{Ausencia de semilla fija:} La simulación Monte Carlo y varios pasos del algoritmo genético son estocásticos; por ello, dos ejecuciones sucesivas pueden producir resultados distintos.
@@ -611,35 +626,21 @@ El sistema produce los siguientes artefactos digitales:
 \subsection{Conclusiones}
 % -----------------------------------------------------------
 
-\begin{enumerate}
-    \item Se implementó un sistema integral de diagnóstico de seguridad ciudadana que combina escenarios Monte Carlo, clasificación difusa, optimización genética de pesos, análisis de conectividad BFS y reglas explicativas Apriori/PRISM para la ciudad de Ambato.
-    
-    \item La lógica difusa del proyecto se concreta en una agregación ponderada de funciones de membresía triangulares y sigmoides, lo que permite producir un score continuo y una etiqueta interpretable de riesgo sin depender de un clasificador estrictamente booleano.
-    
-    \item El algoritmo genético aporta una calibración heurística de los pesos de las cinco variables. Su fitness está basado en precisión de clasificación sobre un dataset sintético interno, por lo que su principal contribución en esta versión es ajustar ponderaciones de manera automática entre ejecuciones.
-    
-    \item Las reglas Apriori y PRISM funcionan en el sistema como una capa explicativa posterior al diagnóstico. Aunque no determinan directamente el score final, sí aportan una interpretación textual legible del resultado para niveles medio y alto.
-    
-    \item El sistema produce artefactos útiles para la comunicación de resultados: mapa HTML georreferenciado, gráficas de históricos reales, gráficas Monte Carlo, salida detallada por consola y un reporte HTML consolidado para revisión posterior.
-\end{enumerate}
+El desarrollo realizado permitió consolidar un sistema integral de diagnóstico de riesgo urbano para la ciudad de Ambato, articulando de manera funcional varias técnicas de Inteligencia Artificial dentro de un mismo flujo de procesamiento. La integración de simulación Monte Carlo, lógica difusa, algoritmo genético, análisis de conectividad mediante BFS y reglas explicativas Apriori/PRISM evidenció que es posible construir un prototipo analítico capaz de transformar datos históricos y geográficos en resultados interpretables, útiles para la caracterización preliminar de zonas con distinto nivel de riesgo.
+
+Desde el punto de vista metodológico, la investigación confirma que la lógica difusa constituye el núcleo más adecuado para representar la incertidumbre inherente al fenómeno estudiado, al permitir la transición entre categorías de riesgo sin recurrir a umbrales estrictamente binarios. A ello se suma el aporte del algoritmo genético, que automatiza la calibración de pesos de las variables consideradas, y el componente basado en reglas, que fortalece la interpretabilidad del diagnóstico al ofrecer explicaciones legibles para los niveles medio y alto. En conjunto, estos elementos no solo mejoran la consistencia interna del sistema, sino que también incrementan su valor como herramienta académica y demostrativa.
+
+En términos de resultados, el proyecto demuestra que un enfoque híbrido puede generar salidas técnicamente consistentes y comunicativamente útiles, tales como mapas HTML, gráficas comparativas, trazas detalladas por consola y reportes consolidados. No obstante, también se constata que la precisión operativa del sistema depende de la calidad y actualización de los datos históricos, así como de futuras etapas de validación empírica. Por ello, el trabajo debe entenderse como una base sólida y metodológicamente coherente para posteriores procesos de refinamiento, validación institucional y eventual aplicación en escenarios reales de apoyo a la toma de decisiones en seguridad ciudadana.
 
 % -----------------------------------------------------------
 \subsection{Recomendaciones}
 % -----------------------------------------------------------
 
-\begin{enumerate}
-    \item \textbf{Actualización periódica del dataset:} Implementar un mecanismo de actualización mensual del archivo CSV de históricos, conectado directamente con los sistemas de registro de incidentes de las entidades de seguridad pública, para mantener la vigencia del diagnóstico y detectar cambios en las dinámicas delictivas.
-    
-    \item \textbf{Validación de campo con datos reales:} Contrastar sistemáticamente los diagnósticos del sistema con registros de intervención policial verificados (partes de novedades, registros de detenciones) para cuantificar la precisión real del sistema y corregir sesgos sistemáticos en los datos históricos.
-    
-    \item \textbf{Extensión del cromosoma al AG:} Ampliar el espacio de optimización del algoritmo genético para incluir también los parámetros de las funciones de membresía triangulares y sigmoides, incrementando el número de genes y aprovechando mejor la capacidad de búsqueda del AG en espacios de mayor dimensión.
-    
-    \item \textbf{Incorporación de variables adicionales:} Integrar nuevas fuentes de información como la densidad comercial por zona, el nivel socioeconómico del barrio, la iluminación pública o la presencia de cámaras de vigilancia, para enriquecer el diagnóstico con factores contextuales de relevancia en criminología urbana.
-    
-    \item \textbf{Colaboración interinstitucional:} Establecer convenios con el Municipio de Ambato, la Policía Nacional y el ECU-911 para acceder a datos históricos oficiales de mayor resolución espacial y temporal, reemplazando progresivamente los datos sintéticos por registros reales verificados.
-    
-    \item \textbf{Escalabilidad a otras ciudades:} El sistema está diseñado con una arquitectura modular que permite su adaptación a otras ciudades ecuatorianas con mínimo esfuerzo (cambio del grafo OSM y del archivo CSV de históricos), convirtiéndolo en un prototipo replicable para políticas de seguridad ciudadana a nivel nacional.
-\end{enumerate}
+Como primera recomendación, se considera indispensable fortalecer la base empírica del sistema mediante la actualización periódica del dataset histórico y su contraste con registros oficiales verificados. La utilidad analítica del diagnóstico depende directamente de la vigencia, granularidad y confiabilidad de la información empleada; por ello, una futura implementación debería vincularse con fuentes institucionales de mayor resolución espacial y temporal, de modo que el modelo pueda reflejar con mayor fidelidad la dinámica real de la seguridad urbana.
+
+En segundo término, se recomienda ampliar el alcance metodológico del sistema incorporando nuevas variables contextuales y extendiendo el proceso de optimización. Factores como densidad comercial, iluminación pública, nivel socioeconómico, presencia de equipamientos de seguridad o patrones temporales de incidencia podrían enriquecer significativamente la capacidad explicativa del modelo. De igual manera, resultaría pertinente que el algoritmo genético optimice no solo los pesos de entrada, sino también parámetros de las funciones de membresía, con el propósito de lograr una representación más fina y adaptativa del riesgo.
+
+Finalmente, se sugiere orientar el trabajo hacia una fase de validación aplicada e interoperabilidad institucional. La comparación sistemática entre los diagnósticos generados por el sistema y evidencias de campo permitiría estimar su precisión real, identificar sesgos y establecer criterios de mejora continua. Bajo esta perspectiva, la arquitectura modular desarrollada ofrece una base adecuada para escalar el prototipo hacia otros contextos urbanos del país, siempre que dicho proceso se acompañe de validación técnica, coordinación interinstitucional y criterios rigurosos de actualización y supervisión de datos.
 
 \subsection{Habilidades blandas empleadas en la práctica}
 $\square$ Liderazgo \\
@@ -654,62 +655,95 @@ $\blacksquare$ Responsabilidad \\
 
 \section{APÉNDICE: DIAGRAMAS Y ESQUEMAS}
 
-\subsection{Figura 1: Arquitectura del Sistema}
-\label{fig:arquitectura}
-
 \begin{flushleft}
 La siguiente figura ilustra la arquitectura general del sistema, mostrando cómo fluyen los datos desde las fuentes de entrada (OpenStreetMap y datos históricos) a través del motor de diagnóstico, donde se aplican los algoritmos de IA, hasta la generación de salidas (mapas y gráficas):
 \end{flushleft}
 
-\vspace{0.5cm}
-\begin{center}
-\begin{tabular}{|p{14cm}|}
-\hline
-\textbf{Arquitectura del Sistema de Diagnóstico de Riesgo Urbano:} \\
-- \textbf{Entrada:} OpenStreetMap (grafo vial) + CSV histórico (12 meses × 4 macro-zonas, 5 variables por fila) \\
-- \textbf{Preprocesamiento:} Construcción de grilla 30×30 + Geocodificación inversa con caché + Asignación de macro-zonas por cuadrantes \\
-- \textbf{Motor de IA:} Procesa cada zona realizando: \\
-  \quad • Generación de un escenario Monte Carlo coherente con la macro-zona \\
-  \quad • Optimización con algoritmo genético (50 generaciones, 30 individuos) \\
-  \quad • Clasificación difusa con funciones triangulares y sigmoides \\
-  \quad • Ajuste por conectividad BFS (radio 500 m) \\
-  \quad • Regla explicativa Apriori/PRISM según el nivel final \\
-- \textbf{Salida:} Mapas HTML (Folium) + Gráficas PNG + Reporte HTML + Reportes textuales \\
-- \textbf{Tiempo total:} 5--10 minutos por ciudad \\
-\hline
-\end{tabular}
-\end{center}
+\begin{figure}[H]
+\centering
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[
+    node distance=0.8cm and 1.0cm,
+    every node/.style={font=\small},
+    box/.style={draw, rounded corners=3pt, align=center, minimum height=0.95cm, text width=3.2cm, fill=gray!8},
+    inputbox/.style={box, fill=blue!8},
+    corebox/.style={box, fill=orange!10, text width=4.0cm, minimum height=1.1cm},
+    procbox/.style={box, fill=green!8, text width=2.9cm},
+    outputbox/.style={box, fill=red!8, text width=3.5cm},
+    line/.style={-Latex, thick}
+]
+\node[inputbox] (osm) {OpenStreetMap\\Grafo vial};
+\node[inputbox, below=of osm] (csv) {CSV histórico\\4 macro-zonas, 12 meses};
 
-\subsection{Figura 2: Flujo de Procesamiento por Zona}
-\label{fig:flujo}
+\node[corebox, right=2.2cm of $(osm)!0.5!(csv)$] (pre) {Preprocesamiento\\Grilla 30$\times$30, geocodificación\\y asignación de macro-zonas};
+\node[corebox, right=2.3cm of pre] (motor) {Motor de diagnóstico\\por zona};
+
+\node[procbox, right=1.8cm of motor, yshift=1.55cm] (mc) {Monte Carlo};
+\node[procbox, right=1.8cm of motor, yshift=0.55cm] (ga) {Algoritmo\\genético};
+\node[procbox, right=1.8cm of motor, yshift=-0.45cm] (fz) {Lógica\\difusa};
+\node[procbox, right=1.8cm of motor, yshift=-1.45cm] (rg) {Reglas y\\conectividad BFS};
+
+\node[outputbox, below right=1.0cm and 0.9cm of ga] (out1) {Mapas HTML\\y gráficas PNG};
+\node[outputbox, below=0.7cm of out1] (out2) {Reporte HTML y\\clasificación final\\Bajo / Medio / Alto};
+
+\draw[line] (osm.east) -- (pre.west);
+\draw[line] (csv.east) -- (pre.west);
+\draw[line] (pre.east) -- (motor.west);
+\draw[line] (motor.east) -- (mc.west);
+\draw[line] (motor.east) -- (ga.west);
+\draw[line] (motor.east) -- (fz.west);
+\draw[line] (motor.east) -- (rg.west);
+\draw[line] (mc.south east) -- (out1.north west);
+\draw[line] (ga.south) -- (out1.north);
+\draw[line] (fz.south east) -- (out1.west);
+\draw[line] (rg.east) -- ++(0.4,0) |- (out2.east);
+\draw[line] (out1.south) -- (out2.north);
+\end{tikzpicture}
+}
+\caption{Arquitectura del Sistema}
+\label{fig:arquitectura}
+\par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en la arquitectura del sistema implementado.}
+\end{figure}
 
 \begin{flushleft}
 El siguiente diagrama detalla el flujo secuencial de procesamiento para cada una de las 900 zonas de análisis:
 \end{flushleft}
 
-\vspace{0.5cm}
-\begin{center}
-\begin{tabular}{|p{14cm}|}
-\hline
-\textbf{Flujo de Procesamiento:} \\
-1. OpenStreetMap → Descargar grafo vial \\
-2. Grafo + Bounding Box → Construir grilla 30×30 con nombres de barrios \\
-3. CSV histórico → Calcular $\mu$, $\sigma$, min, max por variable y macro-zona \\
-4. Configurar centro del mapa → Definir macro-zonas Norte/Oeste/Este/Sur \\
-5. Para cada celda $(i,j)$ de la grilla: \\
-   \quad a. Obtener macro-zona según cuadrante del centro del mapa \\
-   \quad b. Generar un escenario sintético único mediante Monte Carlo acotado \\
-   \quad c. Crear pesos $\mathbf{w}$ con el algoritmo genético \\
-   \quad d. Aplicar clasificador difuso → score y nivel preliminar \\
-   \quad e. Ajustar el score con conectividad BFS (radio 500 m) \\
-   \quad f. Obtener factores principales y regla explicativa \\
-   \quad g. Guardar nivel final (Bajo/Medio/Alto) \\
-7. Agregar todas las zonas a estructura de datos \\
-8. Generar mapa HTML interactivo con código de colores y \textit{popup} explicativo \\
-9. Exportar gráficas históricas, gráficas Monte Carlo y reporte HTML \\
-\hline
-\end{tabular}
-\end{center}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+    node distance=0.55cm,
+    every node/.style={font=\small},
+    flowstep/.style={draw, rounded corners=3pt, align=left, text width=12.4cm, minimum height=0.82cm, fill=gray!6},
+    loop/.style={draw, rounded corners=3pt, align=left, text width=11.2cm, minimum height=3.1cm, fill=blue!5},
+    line/.style={-Latex, thick}
+]
+\node[flowstep] (s1) {1. Descargar grafo vial desde OpenStreetMap y construir la grilla urbana de 30$\times$30 zonas.};
+\node[flowstep, below=of s1] (s2) {2. Cargar el CSV histórico y calcular media, desviación estándar, mínimo y máximo por variable y macro-zona.};
+\node[flowstep, below=of s2] (s3) {3. Configurar el centro del mapa para definir las macro-zonas Norte, Oeste, Este y Sur.};
+\node[loop, below=of s3] (s4) {4. Para cada celda de la grilla:\\
+\hspace*{0.4cm}a) identificar la macro-zona correspondiente;\\
+\hspace*{0.4cm}b) generar un escenario sintético único mediante Monte Carlo;\\
+\hspace*{0.4cm}c) optimizar pesos con el algoritmo genético;\\
+\hspace*{0.4cm}d) clasificar con lógica difusa y calcular el \textit{score};\\
+\hspace*{0.4cm}e) ajustar por conectividad BFS;\\
+\hspace*{0.4cm}f) obtener factores principales y regla explicativa;\\
+\hspace*{0.4cm}g) almacenar el nivel final de riesgo.};
+\node[flowstep, below=of s4] (s5) {5. Agregar todos los resultados a la estructura general del análisis.};
+\node[flowstep, below=of s5] (s6) {6. Generar mapa HTML interactivo con código de colores y \textit{popup} explicativo.};
+\node[flowstep, below=of s6] (s7) {7. Exportar gráficas históricas, gráficas Monte Carlo y reporte HTML consolidado.};
+
+\draw[line] (s1.south) -- (s2.north);
+\draw[line] (s2.south) -- (s3.north);
+\draw[line] (s3.south) -- (s4.north);
+\draw[line] (s4.south) -- (s5.north);
+\draw[line] (s5.south) -- (s6.north);
+\draw[line] (s6.south) -- (s7.north);
+\end{tikzpicture}
+\caption{Flujo de Procesamiento por Zona}
+\label{fig:flujo}
+\par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en el flujo operacional del sistema desarrollado.}
+\end{figure}
 
 \subsection{Referencias bibliográficas}
 {
@@ -732,17 +766,8 @@ R. Agrawal and R. Srikant, \textit{Fast Algorithms for Mining Association Rules}
 \bibitem{b5}
 J. R. Quinlan, \textit{Learning Logical Definitions from Relations}, \textit{Machine Learning}, Vol. 5, No. 3, pp. 239--266, 1990.
 
-\bibitem{b6}
-M. E. J. Newman and M. Girvan, \textit{Finding and Evaluating Community Structure in Networks}, \textit{Physical Review E}, Vol. 69, No. 2, 2004.
-
 \bibitem{b7}
 E. H. Mamdani and S. Assilian, \textit{An Experiment in Linguistic Synthesis with a Fuzzy Logic Controller}, \textit{International Journal of Man-Machine Studies}, Vol. 7, No. 1, pp. 1--13, 1975.
-
-\bibitem{b8}
-C. A. Coello, G. B. Lamont, and D. A. Van Veldhuizen, \textit{Evolutionary Algorithms for Solving Multi-Objective Problems}, 2nd ed., Springer, 2007.
-
-\bibitem{b9}
-T. Hevner, S. T. March, J. Park, and S. Ram, \textit{Design Science in Information Systems Research}, \textit{MIS Quarterly}, Vol. 28, No. 1, pp. 75--105, 2004.
 
 \bibitem{b10}
 G. Boeing, \textit{OSMnx: New Methods for Acquiring, Constructing, Analyzing, and Visualizing Complex Street Networks}, \textit{Computers, Environment and Urban Systems}, Vol. 65, pp. 126--139, 2017.
