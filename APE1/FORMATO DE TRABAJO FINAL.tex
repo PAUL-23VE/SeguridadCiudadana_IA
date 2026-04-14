@@ -20,9 +20,9 @@
 \usepackage[hidelinks]{hyperref}
 \pagestyle{fancy}
 \fancyhf{} 
-\setlength{\headheight}{35pt}  
+\setlength{\headheight}{65pt}  
 \setlength{\headsep}{35pt}     
-\fancyhead[L]{\includegraphics[width=18cm]{picture/logoSW2026.pdf}}
+\fancyhead[L]{\includegraphics[width=\textwidth]{picture/logoSW2026.pdf}}
 \renewcommand{\headrulewidth}{0pt}   
 \fancyfoot[C]{\thepage} 
 \setlength{\footskip}{14pt}
@@ -63,8 +63,8 @@ Desarrollar e implementar un sistema de diagnóstico de zonas de riesgo urbano e
 
 \textbf{Específicos:}\\
 \begin{itemize}
-    \item Definir formalmente las variables de entrada del sistema (robos, microtráfico, vandalismo, accidentes y llamadas al 911), sus rangos válidos y sus categorías lingüísticas, respaldados en datos históricos reales por macro-zona, para construir un modelo de lógica difusa Mamdani que clasifique el nivel de riesgo urbano en bajo, medio y alto.
-    \item Diseñar e implementar un algoritmo genético que optimice los pesos de ponderación de las variables de entrada, evaluando cada individuo mediante una función de fitness que mide la coherencia entre el índice de riesgo calculado y los patrones históricos por zona, e incorporando elitismo y criterio de parada por convergencia.
+    \item Definir formalmente las variables de entrada del sistema (robos, microtráfico, vandalismo, accidentes y llamadas al 911), sus rangos válidos y sus categorías lingüísticas, respaldadas en datos históricos por macro-zona, para construir un clasificador difuso que estime el nivel de riesgo urbano en bajo, medio y alto.
+    \item Diseñar e implementar un algoritmo genético que optimice los pesos de ponderación de las variables de entrada, evaluando cada individuo mediante precisión de clasificación sobre un conjunto sintético de prueba y aplicando selección por truncamiento, cruce por promedio, mutación uniforme y elitismo efectivo de un individuo.
     \item Analizar y documentar los resultados obtenidos por el sistema integrado, identificando las zonas de mayor riesgo en la ciudad, validando la coherencia de los diagnósticos mediante comparación con la distribución histórica de incidentes, y formulando conclusiones y recomendaciones orientadas a la intervención en seguridad ciudadana.
 \end{itemize}
 
@@ -90,7 +90,7 @@ Listado de equipos y materiales generales empleados en la guía práctica:\\
 \begin{itemize}
     \item Computador personal con sistema operativo Windows/Linux/macOS
     \item Python 3.8 o superior
-    \item Librerías: OSMnx, NetworkX, NumPy, SciPy, Scikit-learn, Scikit-fuzzy, Folium y Matplotlib
+    \item Librerías principales utilizadas en el código: OSMnx, NetworkX, NumPy, Pandas, Folium y Matplotlib
     \item Editor de código (Visual Studio Code)
     \item Internet
     \item Datos históricos del sistema (archivo CSV por macro-zonas)
@@ -109,7 +109,7 @@ Otros (Especifique): \underline{\hspace{5cm}} \\
 
 \subsection{Actividades por desarrollar}
 
-El presente trabajo integra técnicas de Inteligencia Artificial para el análisis de seguridad ciudadana en Ambato. El sistema parte de datos históricos de incidentes por macro-zona (Norte, Sur, Este, Oeste), genera escenarios sintéticos mediante simulación Monte Carlo, aplica lógica difusa para clasificar el nivel de riesgo urbano, y utiliza un algoritmo genético para optimizar los parámetros del diagnóstico. A partir de esta arquitectura, las actividades a desarrollar son las siguientes:
+El presente trabajo integra técnicas de Inteligencia Artificial para el análisis de seguridad ciudadana en Ambato. El sistema parte de datos históricos de incidentes por macro-zona (Norte, Sur, Este, Oeste), genera escenarios sintéticos mediante simulación Monte Carlo, aplica un clasificador difuso para estimar el nivel de riesgo urbano, utiliza un algoritmo genético para optimizar pesos y produce reglas explicativas con Apriori/PRISM. A partir de esta arquitectura, las actividades desarrolladas son las siguientes:
 
 \begin{enumerate}[leftmargin=*, itemsep=0.2em, topsep=0.2em]
     \item \textbf{Preparación del entorno y estructura del sistema.}
@@ -128,15 +128,13 @@ El presente trabajo integra técnicas de Inteligencia Artificial para el anális
     \item \textbf{Aplicación de algoritmos de IA.}
     Integrar en el flujo del diagnóstico los siguientes enfoques:
     \begin{itemize}[leftmargin=1.5em, itemsep=0pt, topsep=0pt]
-        \item Lógica difusa para clasificación de riesgo
-        \item Algoritmo genético para optimización de parámetros
-        \item Reglas de asociación y clasificación (Apriori/PRISM)
-        \item Simulación Monte Carlo para escenarios sintéticos
-        \item Conectividad mediante búsqueda en grafos (BFS)
+        \item Simulación Monte Carlo para escenarios sintéticos por macro-zona.
+        \item Algoritmo genético para optimización de pesos de las cinco variables.
+        \item Clasificación difusa basada en funciones de membresía triangulares y sigmoides.
+        \item Reglas explicativas mediante Apriori y PRISM.
+        \item Ajuste espacial mediante análisis de conectividad BFS.
     \end{itemize}
-
-    \item \textbf{Generación e interpretación de resultados.}
-    Producir mapas interactivos y gráficas persistentes para analizar zonas críticas, comparar escenarios y documentar hallazgos.
+    Producir mapas interactivos, reportes HTML y gráficas persistentes para analizar zonas críticas, comparar escenarios y documentar hallazgos.
 \end{enumerate}
 
 % ============================================================
@@ -152,12 +150,12 @@ La seguridad ciudadana constituye uno de los pilares fundamentales del bienestar
 Ante esta problemática, la Inteligencia Artificial (IA) ofrece un conjunto de herramientas metodológicas capaces de procesar volume\-nes de información heterogénea, capturar la imprecisión inherente a los conceptos de riesgo y generar diagnósticos reproducibles y auditables. En particular, tres paradigmas complementarios resultan especialmente idóneos para este dominio:
 
 \begin{enumerate}
-    \item \textbf{Aprendizaje basado en reglas:} permite codificar conocimiento experto en forma de reglas explícitas IF-THEN que modelan los patrones delictivos conocidos. Algoritmos como Apriori \cite{b4} y PRISM \cite{b5} extraen reglas de asociación e inducción directamente desde los datos históricos, dotando al sistema de trazabilidad e interpretabilidad.
+    \item \textbf{Aprendizaje basado en reglas:} técnicas como Apriori y PRISM permiten extraer o formular relaciones del tipo ``SI condición ENTONCES riesgo'' de manera interpretable. En este proyecto se emplean como capa explicativa posterior al diagnóstico para producir reglas legibles sobre categorías discretizadas de las variables \cite{b4,b5}.
     \item \textbf{Lógica difusa:} propuesta originalmente por Zadeh \cite{b1} en 1965, la lógica difusa gestiona de forma natural la imprecisión lingüística de conceptos como ``zona de alto riesgo'' o ``nivel de microtráfico moderado''. A través de funciones de membresía, transforma valores cuantitativos en categorías lingüísticas graduales, evitando la artificiosidad de los umbrales booleanos.
     \item \textbf{Algoritmos genéticos:} inspirados en los mecanismos de la evolución biológica y formalizados por Holland \cite{b2}, permiten optimizar parámetros en espacios de búsqueda complejos y no diferenciables, como la ponderación de variables de riesgo, sin requerir supuestos restrictivos sobre la forma de la función objetivo.
 \end{enumerate}
 
-Este proyecto integra de forma coherente los tres paradigmas en un flujo de procesamiento unificado, construido sobre datos geográficos reales de Ambato obtenidos desde OpenStreetMap y sobre un registro histórico de incidentes delictivos por macro-zona. El resultado es un sistema de diagnóstico capaz de clasificar automáticamente el nivel de riesgo de cada zona de la ciudad, generar visualizaciones georreferenciadas interpretables y servir de insumo para la planificación de intervenciones en seguridad ciudadana.
+Este proyecto integra dichos paradigmas en un flujo de procesamiento unificado, construido sobre datos geográficos reales de Ambato obtenidos desde OpenStreetMap y sobre un registro histórico de incidentes delictivos por macro-zona. El resultado es un sistema de diagnóstico capaz de clasificar automáticamente el nivel de riesgo de cada zona de la ciudad, generar visualizaciones georreferenciadas interpretables y servir de insumo para la planificación de intervenciones en seguridad ciudadana.
 
 % -----------------------------------------------------------
 \subsection{Dataset y Fuente de Información}
@@ -178,8 +176,7 @@ El sistema emplea cinco variables de entrada correspondientes a categorías de i
 
 \begin{table}[H]
     \centering
-    \caption{Variables de entrada del sistema de diagnóstico}
-    \begin{tabular}{p{3.5cm}p{2cm}p{7cm}}
+    \begin{tabular}{p{3.3cm}p{2.4cm}p{6.8cm}}
         \toprule
         \textbf{Variable} & \textbf{Unidad} & \textbf{Justificación} \\
         \midrule
@@ -190,6 +187,7 @@ El sistema emplea cinco variables de entrada correspondientes a categorías de i
         Llamadas al 911 & llamadas/mes & Indicador de demanda de intervención del Estado. Integra percepción subjetiva y eventos objetivos de inseguridad. \\
         \bottomrule
     \end{tabular}
+    \caption{Variables de entrada del sistema de diagnóstico}
     \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en literatura especializada.}
 \end{table}
 
@@ -197,7 +195,7 @@ La elección de estas cinco variables responde a la disponibilidad de datos hist
 
 \subsubsection{Estructura del Dataset Histórico}
 
-El archivo CSV de históricos contiene $12 \times 5 \times 4 = 240$ registros mensuales (12 meses, 5 variables, 4 macro-zonas). Para cada macro-zona se calculan cuatro estadísticas descriptivas por variable: media $\mu$, desviación estándar $\sigma$, mínimo y máximo. Estos parámetros alimentan la simulación Monte Carlo y parametrizan las funciones de membresía del sistema difuso.
+El archivo CSV de históricos contiene 48 filas: 12 meses para cada una de las 4 macro-zonas, con las 5 variables almacenadas como columnas en cada registro. Si se contabilizan los valores numéricos individuales, el conjunto representa $12 \times 4 \times 5 = 240$ observaciones escalares. Para cada macro-zona se calculan cuatro estadísticas descriptivas por variable: media $\mu$, desviación estándar $\sigma$, mínimo y máximo. Estos parámetros alimentan la simulación Monte Carlo; las funciones de membresía del clasificador difuso, en cambio, se encuentran definidas directamente en el código.
 
 % -----------------------------------------------------------
 \subsection{Variables y Parámetros del Sistema Difuso}
@@ -205,174 +203,113 @@ El archivo CSV de históricos contiene $12 \times 5 \times 4 = 240$ registros me
 
 \subsubsection{Categorías Lingüísticas y Funciones de Membresía}
 
-El sistema de lógica difusa emplea el modelo de inferencia \textbf{Mamdani} \cite{b1}, que produce salidas lingüísticas directamente interpretables. Para cada variable de entrada se definen tres categorías lingüísticas (bajo, medio, alto) representadas mediante funciones trapezoidales:
+La clasificación difusa implementada en \texttt{src/algoritmos/difuso.py} no utiliza \texttt{scikit-fuzzy} ni una base de reglas Mamdani clásica con antecedentes y consecuentes explícitos. La implementación real calcula directamente tres grados de pertenencia globales (bajo, medio y alto) a partir de las cinco variables de incidentes y de los pesos generados por el algoritmo genético.
+
+Antes de evaluar la membresía, cada variable se normaliza respecto a un máximo fijo de dominio:
 
 \begin{equation}
-    \mu_{trap}(x;\, a, b, c, d) =
+    x_v' = \frac{x_v}{M_v}
+\end{equation}
+
+donde $M_v$ es el máximo permitido para la variable $v$ en el código. La Tabla~\ref{tab:dominios} resume los dominios y el tipo de función asociado a cada variable.
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcc}
+        \toprule
+        \textbf{Variable} & \textbf{Máximo $M_v$} & \textbf{Función principal} \\
+        \midrule
+        Robos                & 100 & Triangular \\
+        Microtráfico         & 50  & Sigmoidal \\
+        Vandalismo           & 80  & Triangular \\
+        Accidentes           & 60  & Triangular \\
+        Llamadas al 911      & 100 & Sigmoidal \\
+        \bottomrule
+    \end{tabular}
+    \caption{Dominios máximos y tipo de membresía implementados en el código}
+    \label{tab:dominios}
+\end{table}
+
+Para las variables triangulares, el código usa la función:
+
+\begin{equation}
+    \mu_{tri}(x;\, a, b, c) =
     \begin{cases}
-        0                    & \text{si } x \leq a     \\
+        0                    & \text{si } x \leq a \text{ o } x \geq c \\
         \dfrac{x - a}{b - a} & \text{si } a < x \leq b \\
-        1                    & \text{si } b < x \leq c \\
-        \dfrac{d - x}{d - c} & \text{si } c < x \leq d \\
-        0                    & \text{si } x > d
+        \dfrac{c - x}{c - b} & \text{si } b < x < c
     \end{cases}
-    \label{eq:trapmf}
+    \label{eq:trimf}
 \end{equation}
 
-La función trapezoidal fue elegida porque permite representar rangos con zonas de certeza plena (el núcleo, donde el nivel de incidencia es definitivamente ``alto'' sin ambigüedad) y zonas de transición gradual en los extremos (rampas laterales), lo cual refleja la naturaleza continua e imprecisa de los fenómenos delictivos \cite{b1}.
-
-\begin{table}[H]
-    \centering
-    \caption{Parámetros de las funciones de membresía por variable (valores normalizados en $[0,\,100]$)}
-    \begin{tabular}{llcccc}
-        \toprule
-        \textbf{Variable} & \textbf{Categoría} & $a$ & $b$ & $c$ & $d$ \\
-        \midrule
-        \multirow{3}{*}{Robos}       & bajo   & 0  & 0  & 20 & 35 \\
-                                     & medio  & 28 & 38 & 55 & 65 \\
-                                     & alto   & 58 & 70 & 100 & 100 \\
-        \midrule
-        \multirow{3}{*}{Microtráfico}& bajo   & 0  & 0  & 15 & 30 \\
-                                     & medio  & 22 & 32 & 50 & 62 \\
-                                     & alto   & 55 & 68 & 100 & 100 \\
-        \midrule
-        \multirow{3}{*}{Vandalismo}  & bajo   & 0  & 0  & 18 & 32 \\
-                                     & medio  & 25 & 35 & 52 & 63 \\
-                                     & alto   & 56 & 68 & 100 & 100 \\
-        \midrule
-        \multirow{3}{*}{Accidentes}  & bajo   & 0  & 0  & 20 & 33 \\
-                                     & medio  & 27 & 38 & 55 & 66 \\
-                                     & alto   & 60 & 72 & 100 & 100 \\
-        \midrule
-        \multirow{3}{*}{Llamadas 911}& bajo   & 0  & 0  & 22 & 36 \\
-                                     & medio  & 30 & 40 & 58 & 68 \\
-                                     & alto   & 62 & 74 & 100 & 100 \\
-        \bottomrule
-    \end{tabular}
-    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia con base en estadísticas históricas por macro-zona.}
-\end{table}
-
-\subsubsection{Variable de Salida: Índice de Riesgo}
-
-La salida del sistema difuso es la variable \textbf{índice\_riesgo} con universo de discurso $[0, 100]$ y tres conjuntos difusos:
-
-\begin{table}[H]
-    \centering
-    \caption{Funciones de membresía de la variable de salida}
-    \begin{tabular}{lcccc}
-        \toprule
-        \textbf{Categoría} & $a$ & $b$ & $c$ & $d$ \\
-        \midrule
-        bajo               & 0   & 0   & 25  & 40  \\
-        medio              & 33  & 45  & 58  & 68  \\
-        alto               & 62  & 75  & 100 & 100 \\
-        \bottomrule
-    \end{tabular}
-    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
-\end{table}
-
-El índice numérico resultante de la defuzzificación se convierte en etiqueta de riesgo según:
+Para las variables sigmoides, el código usa:
 
 \begin{equation}
-    \text{NivelRiesgo} =
-    \begin{cases}
-        \text{Bajo}  & \text{si índice} \leq 33                 \\
-        \text{Medio} & \text{si } 33 < \text{índice} \leq 66 \\
-        \text{Alto}  & \text{si índice} > 66
-    \end{cases}
+    \mu_{\sigma}(x;\, a, s) = \frac{1}{1 + e^{-s(x-a)}}
 \end{equation}
 
-% -----------------------------------------------------------
-\subsection{Aprendizaje Basado en Reglas}
-% -----------------------------------------------------------
+Con estas familias, el código fija internamente los conjuntos \textit{bajo}, \textit{medio} y \textit{alto} sobre el dominio normalizado $[0,1]$. En las variables triangulares se usan los triples $(0, 0, 0.4)$, $(0.25, 0.5, 0.75)$ y $(0.6, 1, 1)$; en las variables sigmoides se combinan puntos de inflexión en $0.25$, $0.30$ y $0.65$ con pendiente $s = 12$.
 
-\subsubsection{Algoritmo Apriori}
+\subsubsection{Agregación Difusa y Variable de Salida}
 
-El algoritmo Apriori \cite{b4} se aplica sobre el dataset histórico de incidentes para extraer itemsets frecuentes y reglas de asociación. El proceso opera sobre tuplas discretizadas (variable, categoría), por ejemplo \texttt{(robos, alto)}, \texttt{(microtráfico, alto)}.
+La salida intermedia del clasificador se obtiene agregando de forma ponderada los grados de pertenencia de cada variable:
 
+\begin{equation}
+    \mu_{bajo}  = \sum_{v=1}^{5} w_v \cdot \mu_{bajo}^{(v)}(x_v'), \qquad
+    \mu_{medio} = \sum_{v=1}^{5} w_v \cdot \mu_{medio}^{(v)}(x_v'), \qquad
+    \mu_{alto}  = \sum_{v=1}^{5} w_v \cdot \mu_{alto}^{(v)}(x_v')
+\end{equation}
+
+El puntaje numérico se calcula mediante una defuzzificación simplificada por centros representativos fijos:
+
+\begin{equation}
+    score = \frac{16.5 \cdot \mu_{bajo} + 50 \cdot \mu_{medio} + 83.5 \cdot \mu_{alto}}
+    {\mu_{bajo} + \mu_{medio} + \mu_{alto}}
+\end{equation}
+
+La etiqueta devuelta por el clasificador difuso se asigna al mayor de los tres grados agregados. En la implementación actual, el parámetro \texttt{metricas} existe en la firma de la función, pero no interviene en el cálculo del \texttt{score}; el diagnóstico depende únicamente de las cinco variables de incidentes y de los pesos optimizados.
+
+\subsubsection{Reglas Explicativas Apriori y PRISM}
+
+El componente basado en reglas se implementa en \texttt{src/algoritmos/reglas.py} y se utiliza con fines explicativos posteriores al cálculo del nivel de riesgo, no como motor principal del \texttt{score}. El proceso real consta de tres etapas.
+
+\paragraph{Etapa 1 — Discretización}
+
+Cada variable se discretiza en \textit{bajo}, \textit{medio} o \textit{alto}. Los umbrales usados por el código son:
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lp{8cm}}
+        \toprule
+        \textbf{Variables} & \textbf{Umbrales implementados} \\
+        \midrule
+        Robos, vandalismo, llamadas al 911 & bajo si $x < 33$; medio si $33 \leq x < 66$; alto en caso contrario \\
+        Microtráfico, accidentes & bajo si $x < 20$; medio si $20 \leq x < 40$; alto en caso contrario \\
+        \bottomrule
+    \end{tabular}
+    \caption{Umbrales de discretización del módulo de reglas}
+\end{table}
+
+\paragraph{Etapa 2 — Generación de dataset transaccional}
+
+El módulo genera internamente 100 zonas sintéticas. Cada transacción contiene ítems del tipo \texttt{robos=alto} y un ítem adicional \texttt{riesgo=Nivel}. El nivel se etiqueta con el promedio ponderado fijo:
+
+\begin{equation}
+    score_{reglas} = 0.35 \cdot robos + 0.15 \cdot microtrafico + 0.25 \cdot vandalismo + 0.10 \cdot accidentes + 0.15 \cdot llamadas911
+\end{equation}
+
+\paragraph{Etapa 3 — Apriori o PRISM}
+
+Sobre ese dataset sintético, Apriori calcula itemsets frecuentes y conserva reglas con soporte mínimo $0.10$ y confianza mínima $0.70$, restringiendo el consecuente a \texttt{riesgo=...}. PRISM busca reglas de la forma \texttt{SI variable=valor ENTONCES riesgo=clase} con confianza mínima $0.50$.
+
+En el pipeline de diagnóstico, la función \texttt{obtener\_regla\_explicativa} devuelve:
 \begin{itemize}
-    \item \textbf{Soporte mínimo:} $\text{mín\_sup} = 10\%$ — un patrón debe aparecer en al menos el 10\% de los registros para ser considerado frecuente.
-    \item \textbf{Confianza mínima:} $\text{mín\_conf} = 60\%$ — las reglas resultantes deben tener al menos 60\% de confianza.
-    \item \textbf{Ejemplo de regla generada:} $\{\text{robos}=\text{alto}\} \Rightarrow \{\text{riesgo}=\text{alto}\}$ con soporte 18\% y confianza 82\%.
+    \item la primera regla Apriori si el nivel final es \textbf{Alto};
+    \item la primera regla PRISM si el nivel final es \textbf{Medio};
+    \item el texto ``Sin regla relevante para nivel de riesgo bajo'' si el nivel final es \textbf{Bajo}.
 \end{itemize}
 
-\subsubsection{Algoritmo PRISM}
-
-El algoritmo PRISM \cite{b5} induce reglas de clasificación del tipo $\{\text{antecedentes}\} \Rightarrow \text{riesgo}$ mediante un método greedy que maximiza la confianza en cada paso. A diferencia de Apriori, PRISM construye reglas orientadas directamente a la variable consecuente (el nivel de riesgo) sin explorar todos los itemsets posibles.
-
-\begin{itemize}
-    \item \textbf{Threshold de confianza mínima:} 50\%.
-    \item El conjunto de reglas generado $\mathcal{R} = \{r_1, r_2, \ldots, r_k\}$ es interpretable, auditable y puede ser validado por expertos en seguridad ciudadana.
-\end{itemize}
-
-\subsubsection{Reglas Difusas del Sistema Mamdani}
-
-El motor de inferencia Mamdani utiliza un conjunto de reglas lingüísticas diseñadas con base en el conocimiento experto y refinadas con las reglas extraídas por Apriori/PRISM. Las reglas tienen la forma:
-
-\[
-\textbf{SI} \ (\text{robos es alto}) \ \textbf{Y} \ (\text{microtráfico es alto}) \ \textbf{ENTONCES} \ \text{riesgo es alto}
-\]
-
-A continuación se presentan las reglas principales del sistema:
-
-\begin{longtable}{cp{6cm}c}
-    \caption{Reglas del sistema difuso Mamdani para diagnóstico de riesgo urbano} \label{tab:reglas} \\
-    \toprule
-    \textbf{N\textordmasculine} & \textbf{Antecedentes} & \textbf{Consecuente} \\
-    \midrule
-    \endfirsthead
-    \toprule
-    \textbf{N\textordmasculine} & \textbf{Antecedentes} & \textbf{Consecuente} \\
-    \midrule
-    \endhead
-    \midrule
-    \multicolumn{3}{r}{\textit{Continúa...}} \\
-    \endfoot
-    \bottomrule
-    \endlastfoot
-    1  & Robos=alto AND Microtráfico=alto                          & alto  \\
-    2  & Robos=alto AND Vandalismo=alto                            & alto  \\
-    3  & Microtráfico=alto AND Llamadas911=alto                    & alto  \\
-    4  & Robos=alto AND Accidentes=alto AND Microtráfico=medio     & alto  \\
-    5  & Microtráfico=alto AND Vandalismo=alto AND Robos=medio     & alto  \\
-    6  & Llamadas911=alto AND Robos=alto                           & alto  \\
-    7  & Robos=medio AND Microtráfico=medio AND Vandalismo=medio   & medio \\
-    8  & Llamadas911=medio AND Accidentes=medio                    & medio \\
-    9  & Robos=bajo AND Microtráfico=bajo AND Vandalismo=bajo      & bajo  \\
-    10 & Todos los indicadores en categoría bajo                   & bajo  \\
-\end{longtable}
-\par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
-
-\subsubsection{Proceso de Inferencia Mamdani}
-
-Para cada zona analizada, el motor de inferencia ejecuta tres pasos:
-
-\paragraph{Paso 1 — Fuzzificación}
-
-Dado el vector de valores observados $\mathbf{x} = [x_1, x_2, x_3, x_4, x_5]$ correspondiente a las cinco variables, se calcula el grado de membresía de cada valor en sus conjuntos difusos mediante la ecuación~\eqref{eq:trapmf}. Por ejemplo, para robos $= 65/100$:
-\[
-\mu_{bajo}(65) = 0.0, \quad \mu_{medio}(65) = 0.0, \quad \mu_{alto}(65) = 1.0
-\]
-
-\paragraph{Paso 2 — Evaluación de reglas}
-
-Para cada regla $k$ con antecedentes $(var_1, cat_1), (var_2, cat_2), \ldots$, la fuerza de activación se calcula como el mínimo de los grados de membresía de sus antecedentes (operador AND difuso):
-\[
-\alpha_k = \min\bigl(\mu_{cat_1}(x_{var_1}),\; \mu_{cat_2}(x_{var_2}),\; \ldots\bigr)
-\]
-Cuando múltiples reglas apuntan al mismo consecuente, se aplica el operador OR difuso (máximo):
-\[
-A_{consecuente} = \max_{\{k\,:\,consecuente_k = consecuente\}} \alpha_k
-\]
-
-\paragraph{Paso 3 — Defuzzificación por centroide}
-
-Los conjuntos difusos de salida se recortan al nivel de activación y se agregan. El índice numérico final se obtiene mediante el centroide (centro de gravedad):
-\[
-z^* = \frac{\int_0^{100} z \cdot \mu_{agregado}(z)\, dz}{\int_0^{100} \mu_{agregado}(z)\, dz}
-\]
-
-Este método fue seleccionado por producir resultados continuos y suaves ante variaciones en la entrada, con interpretación geométrica intuitiva como el ``centro de peso'' de la distribución difusa resultante \cite{b1}.
+Por tanto, las reglas se usan como explicación textual del resultado y no como insumo directo del cálculo difuso o del ajuste por conectividad.
 
 % -----------------------------------------------------------
 \subsection{Algoritmo Genético}
@@ -380,15 +317,15 @@ Este método fue seleccionado por producir resultados continuos y suaves ante va
 
 \subsubsection{Motivación}
 
-Las funciones de membresía del sistema difuso son críticas para la precisión del diagnóstico. Aunque se definieron con base en datos históricos, el ajuste manual de los 20 parámetros (4 por trapezoide $\times$ 5 variables) con mayor número de categorías no garantiza encontrar la configuración óptima. Este problema de optimización tiene las siguientes características:
+En la implementación actual, el algoritmo genético no optimiza la forma de las funciones de membresía sino únicamente los pesos relativos asignados a las cinco variables de incidentes. Esto convierte el problema en una búsqueda sobre un espacio continuo de cinco dimensiones, donde cada solución candidata representa una combinación convexa de pesos.
 
 \begin{itemize}
-    \item \textbf{Espacio continuo de alta dimensión:} múltiples parámetros a optimizar simultáneamente.
-    \item \textbf{Función objetivo no diferenciable:} la coherencia del diagnóstico no tiene gradiente calculable en forma analítica.
-    \item \textbf{Restricciones de consistencia:} los parámetros deben formar trapezoides válidos ($a \leq b \leq c \leq d$).
+    \item \textbf{Espacio continuo acotado:} cada gen debe permanecer en $[0,1]$.
+    \item \textbf{Normalización obligatoria:} los pesos se renormalizan para que $\sum_i w_i = 1$.
+    \item \textbf{Función objetivo no lineal:} la calidad de un individuo depende de la precisión de clasificación obtenida sobre un conjunto sintético de prueba.
 \end{itemize}
 
-Los algoritmos genéticos \cite{b2} son especialmente adecuados para estos problemas porque no requieren cálculo de gradientes, exploran el espacio de búsqueda en paralelo mediante una población de soluciones candidatas, y son robustos frente a máximos locales.
+Los algoritmos genéticos \cite{b2} son adecuados para este contexto porque permiten explorar automáticamente múltiples combinaciones de pesos sin requerir gradientes ni una forma analítica simple de la función objetivo.
 
 \subsubsection{Codificación del Cromosoma}
 
@@ -403,7 +340,6 @@ Cada \textbf{individuo} (solución candidata) en el algoritmo genético es un \t
 
 \begin{table}[H]
     \centering
-    \caption{Estructura del cromosoma del algoritmo genético}
     \begin{tabular}{cccccc}
         \toprule
         \textbf{Gen} & 1 & 2 & 3 & 4 & 5 \\
@@ -412,92 +348,87 @@ Cada \textbf{individuo} (solución candidata) en el algoritmo genético es un \t
         \textbf{Dominio}  & $[0,1]$ & $[0,1]$ & $[0,1]$ & $[0,1]$ & $[0,1]$ \\
         \bottomrule
     \end{tabular}
+    \caption{Estructura del cromosoma del algoritmo genético}
     \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
 \end{table}
 
 \subsubsection{Población Inicial}
 
-La población inicial de \textbf{30 individuos} se genera mediante una estrategia mixta:
+La población inicial de \textbf{30 individuos} se genera de manera totalmente aleatoria. Para cada individuo, el código crea cinco valores aleatorios positivos y luego los normaliza para que su suma sea exactamente 1.
 
 \begin{itemize}
-    \item \textbf{60\% perturbados (18 individuos):} Variaciones del cromosoma base (pesos uniformes $w_i = 0.2$) con ruido gaussiano $\mathcal{N}(0,\, \sigma = 0.05)$. Esto explora el vecindario del diseño inicial igualitario.
-    \item \textbf{40\% aleatorios (12 individuos):} Cromosomas generados uniformemente dentro del simplex unidad $\sum w_i = 1$. Aportan diversidad global y evitan convergencia prematura.
+    \item No existe un cromosoma base fijo ni una población parcialmente perturbada.
+    \item La diversidad inicial proviene exclusivamente de la aleatoriedad de los cinco pesos antes de la normalización.
 \end{itemize}
 
 \subsubsection{Función de Fitness}
 
-La función de fitness evalúa qué tan bien clasifica el individuo las zonas históricas conocidas, midiendo la coherencia entre el índice de riesgo producido y los patrones reales de incidentes:
+La función de fitness implementada en \texttt{src/algoritmos/genetico.py} mide únicamente \textbf{precisión de clasificación} sobre un dataset sintético interno de 100 ejemplos. Primero se genera un conjunto de prueba con cinco variables y una etiqueta \texttt{nivel\_real} obtenida mediante:
 
 \begin{equation}
-    \text{fitness}(\mathbf{w}) = \alpha \cdot \text{Exactitud}(\mathbf{w}) + (1-\alpha) \cdot \text{Coherencia}(\mathbf{w}) - \beta \cdot P_{inconsistencia}
+    score_{base} = 0.35 \cdot robos + 0.15 \cdot microtrafico + 0.25 \cdot vandalismo + 0.10 \cdot accidentes + 0.15 \cdot llamadas911
     \label{eq:fitness}
 \end{equation}
 
-donde:
-\begin{itemize}
-    \item $\text{Exactitud}(\mathbf{w})$: fracción de zonas históricas clasificadas correctamente en su nivel de riesgo (bajo/medio/alto).
-    \item $\text{Coherencia}(\mathbf{w})$: mide que zonas con alta densidad de incidentes reciban mayor índice que zonas con baja densidad (correlación de Spearman entre índice calculado y ranking histórico).
-    \item $P_{inconsistencia}$: penalización por violación de restricciones (pesos negativos o suma $>1$ tras mutación).
-    \item $\alpha = 0.7$: pondera mayoritariamente la exactitud de clasificación.
-    \item $\beta = 0.5$: penaliza fuertemente las inconsistencias.
-\end{itemize}
+y se discretiza el resultado en \textit{Bajo}, \textit{Medio} o \textit{Alto} usando umbrales 33 y 66. Después, cada individuo produce una predicción ponderada y su fitness queda definido como:
+
+\begin{equation}
+    \text{fitness}(\mathbf{w}) = \frac{\text{número de predicciones correctas}}{\text{número total de ejemplos}}
+\end{equation}
+
+Por tanto, la versión actual del código no utiliza términos explícitos de correlación, coherencia espacial, penalización adicional ni combinación multiobjetivo.
 
 \subsubsection{Selección de Padres}
 
-Se utiliza \textbf{selección por torneo} con tamaño $k = 3$. En cada torneo, se eligen aleatoriamente 3 individuos de la población y el de mayor fitness pasa a ser padre. Este proceso se repite hasta completar los padres necesarios para generar la siguiente generación.
+La selección de padres no se implementa por torneo. El procedimiento real ordena la población por fitness de mayor a menor y conserva directamente la mitad superior como conjunto de padres. Si el tamaño poblacional es 30, se seleccionan 15 padres en cada generación.
 
-La selección por torneo fue preferida sobre la ruleta (proporcional al fitness) porque es más robusta cuando existen grandes diferencias de fitness entre individuos y porque mantiene mejor la diversidad poblacional \cite{b2}.
+\subsubsection{Cruce por Promedio}
 
-\subsubsection{Cruce}
+Se implementó un cruce por promedio. Dados dos padres $P_1$ y $P_2$, se genera un único hijo $H$ calculando el promedio de sus genes (pesos) correspondientes:
 
-Se implementó \textbf{cruce aritmético} con probabilidad $p_c = 0.70$. Dados dos padres $P_1$ y $P_2$, los hijos se generan como:
 \[
-H_1 = \lambda \cdot P_1 + (1 - \lambda) \cdot P_2, \qquad H_2 = (1 - \lambda) \cdot P_1 + \lambda \cdot P_2
+H[w_i] = \frac{P_1[w_i] + P_2[w_i]}{2}
 \]
-donde $\lambda \sim \mathcal{U}(0.3, 0.7)$. Tras el cruce, los pesos de cada hijo se renormalizan para garantizar $\sum w_i = 1$.
 
-El cruce aritmético fue elegido sobre el cruce de un punto porque preserva la estructura del espacio de pesos (produce siempre combinaciones convexas de las soluciones padre) y genera hijos con interpretación geométrica intuitiva \cite{b2}.
+Este método genera un nuevo individuo que se ubica en el punto medio del segmento que conecta a los dos padres en el espacio de soluciones. La renormalización de los pesos para que sumen 1 se realiza después del paso de mutación.
 
-\subsubsection{Mutación}
+\subsubsection{Mutación con Ruido Uniforme}
 
-Cada gen muta con probabilidad $p_m = 0.10$ (10\%). Cuando muta, se le suma ruido gaussiano:
+Cada gen del individuo muta con una probabilidad $p_m = 0.10$ (10\%). Cuando un gen $w_i$ es seleccionado para mutar, se le suma un valor aleatorio extraído de una distribución uniforme:
+
 \[
-w_i' = w_i + \mathcal{N}(0,\; \sigma_m), \qquad \sigma_m = 0.05
+w_i' = w_i + U(-f_m, f_m), \quad \text{con } f_m = 0.2
 \]
-El vector resultante se recorta al dominio $[0, 1]$ y se renormaliza. La mutación gaussiana produce perturbaciones pequeñas alrededor del valor actual, explorando el vecindario local del individuo de forma acorde a la continuidad del espacio de búsqueda.
+
+El valor resultante se recorta para mantenerse en el dominio $[0, 1]$ y, finalmente, el vector completo se renormaliza para asegurar que $\sum w_i' = 1$.
 
 \subsubsection{Elitismo}
 
-Se preservan los \textbf{2 mejores individuos} de cada generación (elitismo = 2) que pasan directamente a la siguiente sin modificación. Esto garantiza que el fitness del mejor individuo nunca decrece a lo largo de las generaciones, previniendo la pérdida de buenas soluciones por efectos aleatorios del cruce y la mutación.
+Aunque \texttt{config.py} declara un elitismo de 2 individuos, la implementación efectiva preserva solo \textbf{un} individuo por generación: el mejor cromosoma encontrado en la generación actual se copia directamente a la nueva población antes de crear el resto de hijos.
 
 \subsubsection{Criterio de Parada}
 
-El algoritmo genético se detiene cuando se cumple una de las siguientes condiciones:
-\begin{enumerate}
-    \item Se alcanza el número máximo de generaciones: \textbf{50 generaciones}.
-    \item Han transcurrido \textbf{10 generaciones consecutivas} sin mejora significativa del fitness del mejor individuo (criterio \textit{early stopping} con paciencia = 10). Se considera mejora significativa cuando $\Delta \text{fitness} > 0.001$.
-\end{enumerate}
+El algoritmo genético de la versión actual se detiene únicamente al completar \textbf{50 generaciones}. No existe un criterio de \textit{early stopping} por convergencia ni una paciencia configurable aplicada en el código.
 
 \begin{table}[H]
     \centering
-    \caption{Parámetros del algoritmo genético}
-    \begin{tabular}{p{5cm}cc}
+    \begin{tabular}{p{6cm}cc}
         \toprule
-        \textbf{Parámetro} & \textbf{Símbolo} & \textbf{Valor} \\
+        \textbf{Parámetro operativo} & \textbf{Símbolo} & \textbf{Valor} \\
         \midrule
-        Tamaño de población        & $N_{pop}$   & 30          \\
-        Máx. generaciones          & $T_{max}$   & 50          \\
-        Paciencia (early stopping) & $P$         & 10          \\
-        Probabilidad de cruce      & $p_c$       & 0.70        \\
-        Probabilidad de mutación   & $p_m$       & 0.10        \\
-        Tamaño de torneo           & $k$         & 3           \\
-        Elitismo                   & $e$         & 2           \\
-        Desv. estándar mutación    & $\sigma_m$  & 0.05        \\
-        Longitud del cromosoma     & $L$         & 5 genes     \\
+        Tamaño de población          & $N_{pop}$ & 30 \\
+        Generaciones                & $T$       & 50 \\
+        Padres seleccionados        & $N_{padres}$ & 15 \\
+        Probabilidad de mutación    & $p_m$     & 0.10 \\
+        Factor de mutación          & $f_m$     & 0.20 \\
+        Elitismo efectivo           & $e$       & 1 \\
+        Longitud del cromosoma      & $L$       & 5 genes \\
         \bottomrule
     \end{tabular}
-    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
+    \caption{Parámetros realmente usados por el algoritmo genético}
 \end{table}
+
+\noindent Aunque \texttt{config.py} declara además \texttt{tasa\_cruce}, \texttt{torneo\_size} y \texttt{elitismo = 2}, esos campos no gobiernan directamente la lógica de \texttt{optimizar\_pesos}; la función usa constantes internas equivalentes a la descripción anterior.
 
 % -----------------------------------------------------------
 \subsection{Arquitectura del Sistema}
@@ -505,32 +436,36 @@ El algoritmo genético se detiene cuando se cumple una de las siguientes condici
 
 \subsubsection{Visión General}
 
-El sistema se organiza en cuatro capas de procesamiento que implementan separación de responsabilidades y permiten la validación independiente de cada componente:
+El sistema se organiza en cuatro capas de procesamiento que implementan separación de responsabilidades y permiten distinguir claramente la fuente de datos, la lógica espacial, el diagnóstico por zona y la generación de salidas:
 
 \begin{enumerate}
     \item \textbf{Capa de Entrada:} Ingesta y validación de datos de dos fuentes — grafo vial OSM y dataset CSV histórico.
     \item \textbf{Capa de Procesamiento Espacial:} Construcción de la grilla urbana $30 \times 30$ y asignación de nombres de barrios mediante geocodificación inversa.
-    \item \textbf{Capa de IA:} Pipeline de procesamiento para cada celda: simulación Monte Carlo → sistema difuso → algoritmo genético → extracción de reglas → análisis de conectividad BFS.
-    \item \textbf{Capa de Salida:} Generación de mapas HTML interactivos y gráficas PNG de simulación.
+    \item \textbf{Capa de IA:} Pipeline de procesamiento para cada celda: escenario Monte Carlo → optimización genética de pesos → clasificación difusa → ajuste por conectividad → regla explicativa.
+    \item \textbf{Capa de Salida:} Generación de mapas HTML, gráficas PNG de históricos y Monte Carlo, y reporte HTML consolidado.
 \end{enumerate}
 
 \subsubsection{Estructura del Proyecto}
 
 \begin{verbatim}
-seguridad_urbana/
+seguridad/
 |-- main.py                      # Punto de entrada principal
-|-- config.py                    # Parámetros centralizados
+|-- config.py                    # Rutas y parámetros declarativos
 \-- src/
     |-- algoritmos/
-    |   |-- logica_difusa.py     # Motor Mamdani
-    |   |-- algoritmo_genetico.py# AG con operadores y fitness
-    |   \-- reglas.py            # Apriori, PRISM
+    |   |-- difuso.py            # Clasificación difusa
+    |   |-- genetico.py          # Optimización de pesos
+    |   |-- reglas.py            # Apriori y PRISM explicativos
+    |   |-- montecarlo.py        # Simulación sintética
+    |   |-- conectividad.py      # BFS por radio
+    |   \-- busqueda.py          # BFS, DFS y A*
     |-- core/
     |   |-- diagnostico.py       # Pipeline central de diagnóstico
-    |   \-- visualizacion.py     # Mapas Folium y gráficas
+    |   |-- mapa.py              # Descarga y grilla OSM
+    |   \-- visualizacion.py     # Visualizaciones adicionales
     \-- utils/
-        |-- datos.py             # Carga y validación CSV/OSM
-        \-- reportes.py          # Exportación de resultados
+        |-- historicos.py        # Gestión del CSV histórico
+        \-- reporte.py           # Exportación HTML
 \end{verbatim}
 
 \subsubsection{Flujo de Procesamiento por Zona}
@@ -538,49 +473,40 @@ seguridad_urbana/
 Para cada una de las 900 celdas de la grilla $30 \times 30$, el sistema ejecuta el siguiente flujo secuencial:
 
 \begin{enumerate}
-    \item Determinar la macro-zona (N/S/E/O) de la celda según su posición relativa al centroide urbano.
-    \item Generar características sintéticas mediante muestreo desde $\mathcal{N}(\mu_{zona}, \sigma_{zona})$ para las cinco variables.
-    \item Ejecutar el algoritmo genético para optimizar los pesos $\mathbf{w}$ del sistema difuso (ejecutado una vez por macro-zona y propagado a sus celdas).
-    \item Calcular el índice de riesgo ponderado con los pesos optimizados.
-    \item Aplicar el motor de inferencia Mamdani con el índice de riesgo.
-    \item Extraer reglas Apriori/PRISM del conjunto de muestras sintéticas.
-    \item Analizar conectividad vial mediante BFS en radio de 500 m.
-    \item Combinar salidas y asignar nivel de riesgo (Bajo/Medio/Alto).
+    \item Obtener las coordenadas del centro de la celda en la grilla.
+    \item Determinar la macro-zona comparando la celda con el centro del mapa configurado.
+    \item Generar un escenario sintético único mediante Monte Carlo a partir de la media, desviación estándar, mínimo y máximo históricos de esa macro-zona.
+    \item Construir dos métricas auxiliares aleatorias (\texttt{densidad\_calles} y \texttt{densidad\_intersecciones}), que hoy se reportan pero no alteran la clasificación difusa.
+    \item Ejecutar el algoritmo genético para obtener un vector de pesos $\mathbf{w}$ específico para la evaluación actual.
+    \item Aplicar el clasificador difuso y obtener \texttt{nivel} y \texttt{score}.
+    \item Si existe grafo vial cargado, analizar conectividad mediante BFS en radio de 500 m y reajustar el score.
+    \item Identificar los dos factores con mayor valor y obtener una regla explicativa Apriori o PRISM según el nivel final.
+    \item Almacenar el diagnóstico y, según el modo de uso, incorporarlo a mapas HTML, consola y reporte.
 \end{enumerate}
 
 \subsubsection{Configuración Centralizada}
 
-El módulo \texttt{config.py} centraliza todos los hiperparámetros del sistema:
+El módulo \texttt{config.py} concentra rutas, colores y varios parámetros declarativos del sistema; sin embargo, la implementación operativa combina esos valores con constantes internas definidas dentro de los módulos algorítmicos. La Tabla~\ref{tab:parametros-operativos} resume los valores realmente observables en el código.
 
 \begin{table}[H]
     \centering
-    \caption{Parámetros clave de configuración del sistema}
-    \begin{tabular}{|l|l|p{7cm}|}
-        \hline
-        \textbf{Módulo} & \textbf{Parámetro} & \textbf{Valor / Descripción} \\
-        \hline
-        \multirow{2}{*}{Grid} & Tamaño & 30×30 (900 zonas) \\
-         & Radio BFS & 500 metros \\
-        \hline
-        \multirow{5}{*}{Algoritmo Genético} & Generaciones & 50 \\
-         & Población & 30 individuos \\
-         & Mutación & 10\% \\
-         & Cruce & 70\% \\
-         & Elitismo & 2 individuos \\
-        \hline
-        \multirow{2}{*}{Lógica Difusa} & Membresía & Trapezoidal \\
-         & Defuzzificación & Centroide \\
-        \hline
-        \multirow{2}{*}{Reglas} & Apriori (soporte) & 10\% mínimo \\
-         & PRISM (confianza) & 50\% mínimo \\
-        \hline
-        \multirow{3}{*}{Clasificación Riesgo} & Bajo & 0--33 puntos \\
-         & Medio & 33--66 puntos \\
-         & Alto & 66--100 puntos \\
-        \hline
-        Monte Carlo & Escenarios & 1.000 por macro-zona \\
-        \hline
+    \begin{tabular}{p{3.4cm}p{3.4cm}p{6.8cm}}
+        \toprule
+        \textbf{Componente} & \textbf{Parámetro} & \textbf{Valor operativo} \\
+        \midrule
+        Grid & Tamaño & 30×30 (900 zonas) \\
+        Conectividad & Radio BFS & 500 metros \\
+        Algoritmo genético & Población / generaciones & 30 individuos / 50 generaciones \\
+        Algoritmo genético & Selección / elitismo & mitad superior como padres / elitismo efectivo de 1 individuo \\
+        Algoritmo genético & Mutación & probabilidad 0.10 y factor uniforme 0.20 \\
+        Clasificador difuso & Tipos de membresía & triangular para robos, vandalismo y accidentes; sigmoidal para microtráfico y llamadas al 911 \\
+        Clasificación final & Umbrales por score & Bajo $< 33$, Medio $< 66$, Alto en caso contrario \\
+        Reglas & Apriori / PRISM & soporte 0.10, confianza 0.70 / confianza 0.50 \\
+        Monte Carlo & Uso operativo & 1 escenario por celda durante el diagnóstico; 1000 simulaciones por macro-zona para visualización \\
+        \bottomrule
     \end{tabular}
+    \caption{Parámetros operativos del sistema}
+    \label{tab:parametros-operativos}
 \end{table}
 
 % -----------------------------------------------------------
@@ -589,39 +515,47 @@ El módulo \texttt{config.py} centraliza todos los hiperparámetros del sistema:
 
 \subsubsection{Simulación Monte Carlo}
 
-Antes de ejecutar el sistema de IA por celda, se generan $N = 1000$ escenarios sintéticos por macro-zona mediante muestreo de Monte Carlo:
+La simulación Monte Carlo implementada en \texttt{src/algoritmos/montecarlo.py} se basa en muestreo normal acotado por los valores históricos mínimos y máximos de cada macro-zona. Para una variable $j$, el valor simulado se genera como:
 
 \begin{equation}
-    X_j^{(i)} \sim \mathcal{N}\!\left(\mu_j^{zona},\; \sigma_j^{zona}\right), \quad i = 1, \ldots, N, \quad j = 1, \ldots, 5
+    X_j = \operatorname{clip}\!\left(\mathcal{N}(\mu_j^{zona}, \sigma_j^{zona}),\; min_j^{zona},\; max_j^{zona}\right)
 \end{equation}
+
+En la ejecución operativa del diagnóstico por celda se utiliza un \textbf{solo escenario} generado por macro-zona y celda. El valor $N = 1000$ aparece en el proyecto únicamente para generar visualizaciones comparativas y reportes Monte Carlo.
 
 Esto permite:
 \begin{itemize}
-    \item Estimar distribuciones posteriores de los indicadores de riesgo.
-    \item Cuantificar la incertidumbre asociada al diagnóstico ($\pm$ desviación estándar del índice de riesgo sobre los 1.000 escenarios).
-    \item Producir histogramas comparativos entre datos históricos reales y distribuciones sintéticas.
+    \item producir escenarios sintéticos consistentes con los rangos históricos;
+    \item comparar visualmente medias, mínimos y máximos históricos frente a simulaciones;
+    \item generar histogramas y resúmenes por macro-zona para el reporte.
 \end{itemize}
 
 \subsubsection{Análisis de Conectividad BFS}
 
-Para cada celda se ejecuta una búsqueda en amplitud (BFS) desde el nodo OSM más cercano al centroide de la celda, dentro de un radio euclidiano de 500 m. El número de nodos alcanzables $|V_{\leq 500m}|$ clasifica la conectividad vial:
+Para cada celda se ejecuta una búsqueda en amplitud (BFS) desde el nodo OSM más cercano al centroide de la zona. El algoritmo recorre vecinos mientras su distancia Haversine al centro de la zona no exceda los 500 m. El número de nodos alcanzables clasifica la conectividad vial como:
 
 \begin{itemize}
-    \item \textbf{Baja:} $|V_{\leq 500m}| < 100$ nodos — zona poco conectada, mayor dificultad de respuesta policial.
-    \item \textbf{Media:} $100 \leq |V_{\leq 500m}| \leq 500$ nodos.
-    \item \textbf{Alta:} $|V_{\leq 500m}| > 500$ nodos — zona bien conectada.
+    \item \textbf{Baja:} menos de 10 nodos alcanzables, con \texttt{factor\_riesgo = 0.8}.
+    \item \textbf{Media:} entre 10 y 29 nodos, con \texttt{factor\_riesgo = 0.5}.
+    \item \textbf{Alta:} 30 nodos o más, con \texttt{factor\_riesgo = 0.2}.
 \end{itemize}
 
-La conectividad vial se incorpora como variable de ajuste en el índice final de riesgo: zonas con baja conectividad reciben un incremento del índice de hasta 10 puntos, dado que la dificultad de acceso de las fuerzas de seguridad amplifica el impacto potencial de los incidentes \cite{b6}.
+La conectividad se incorpora al score final mediante la fórmula:
+
+\begin{equation}
+    score_{ajustado} = score_{difuso} \cdot \frac{1 + factor\_riesgo}{2}
+\end{equation}
+
+Por tanto, una zona con baja conectividad conserva una fracción mayor del score difuso que una zona altamente conectada. Tras este ajuste, el nivel final se vuelve a discretizar con los umbrales 33 y 66.
 
 \subsubsection{Procesamiento Geográfico}
 
 El sistema implementa las siguientes operaciones sobre el grafo OSM:
 
 \begin{itemize}
-    \item \textbf{Construcción de grilla:} Particionamiento del bounding box $\text{bbox}(G) = [\text{lat}_{min}, \text{lon}_{min}, \text{lat}_{max}, \text{lon}_{max}]$ en matriz regular $30 \times 30 = 900$ celdas.
-    \item \textbf{Geocodificación inversa:} Para cada centroide, consulta a la API Nominatim/OSM para asignación de topónimo (nombre de barrio). Se aplica muestreo estratificado (una consulta cada 6 celdas, interpolación para el resto) reduciendo las llamadas de 900 a $\approx 25$.
-    \item \textbf{Asignación de macro-zonas:} Una celda pertenece a la macro-zona Norte si $\text{lat}_{celda} > \text{lat}_{ciudad}$, y análogamente para Sur, Este y Oeste.
+    \item \textbf{Construcción de grilla:} Particionamiento del área descargada desde OSM en una matriz regular de $30 \times 30 = 900$ celdas.
+    \item \textbf{Geocodificación inversa:} Para puntos de referencia de la grilla, el sistema consulta la API Nominatim/OSM y guarda el resultado en caché local. Se usa un muestreo cada 6 celdas y luego se propaga el nombre más cercano al resto, reduciendo las consultas a aproximadamente 25 por ciudad.
+    \item \textbf{Asignación de macro-zonas:} La macro-zona se determina comparando cada coordenada con el centro del mapa: noreste $\rightarrow$ Norte, noroeste $\rightarrow$ Oeste, sureste $\rightarrow$ Este y suroeste $\rightarrow$ Sur.
 \end{itemize}
 
 % -----------------------------------------------------------
@@ -630,47 +564,32 @@ El sistema implementa las siguientes operaciones sobre el grafo OSM:
 
 \subsubsection{Distribución de Riesgo por Macro-Zona}
 
-Tras la ejecución del sistema sobre las 900 celdas de la grilla, se obtiene la distribución de niveles de riesgo por macro-zona. Los resultados cualitativos esperados —basados en las estadísticas históricas incorporadas— evidencian la heterogeneidad espacial de la inseguridad en Ambato:
-
-\begin{table}[H]
-    \centering
-    \caption{Distribución esperada de niveles de riesgo por macro-zona (\%)}
-    \begin{tabular}{lccc}
-        \toprule
-        \textbf{Macro-zona} & \textbf{Bajo (\%)} & \textbf{Medio (\%)} & \textbf{Alto (\%)} \\
-        \midrule
-        Norte & $\approx 45$ & $\approx 35$ & $\approx 20$ \\
-        Sur   & $\approx 30$ & $\approx 40$ & $\approx 30$ \\
-        Este  & $\approx 50$ & $\approx 35$ & $\approx 15$ \\
-        Oeste & $\approx 35$ & $\approx 38$ & $\approx 27$ \\
-        \bottomrule
-    \end{tabular}
-    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia basada en estadísticas históricas por macro-zona. Los porcentajes son productos esperados de la simulación.}
-\end{table}
+Tras la ejecución del sistema sobre la grilla completa o sobre una zona circular, el programa resume el número de celdas clasificadas como \textit{Bajo}, \textit{Medio} y \textit{Alto}. Debido a que el pipeline incorpora generación aleatoria de escenarios Monte Carlo y un algoritmo genético sin semilla fija, estas proporciones pueden variar entre ejecuciones. En consecuencia, el código no garantiza porcentajes estáticos por macro-zona; lo que sí produce de forma consistente es un conteo agregado de niveles y un detalle por zona analizada.
 
 \subsubsection{Impacto del Algoritmo Genético}
 
-El algoritmo genético optimiza los pesos de ponderación de las variables a lo largo de las generaciones. El fitness evoluciona desde un valor base (pesos uniformes $w_i = 0.2$) hasta converger hacia una configuración que minimiza los errores de clasificación en las zonas históricamente etiquetadas. Evidencia empírica en sistemas similares \cite{b2} indica mejoras del 10–20\% en exactitud de clasificación respecto al diseño manual de pesos.
-
-La evolución del fitness muestra la curva característica de los algoritmos evolutivos: mejora rápida en las primeras generaciones (exploración) seguida de una fase de convergencia gradual (explotación), que finaliza por el criterio de early stopping cuando el sistema ha alcanzado un óptimo local de alta calidad.
+El algoritmo genético optimiza los pesos de ponderación de las variables a lo largo de 50 generaciones y reporta periódicamente el mejor fitness alcanzado. En el código actual no existe una comparación automática contra una línea base fija ni una medición formal de mejora porcentual respecto a pesos manuales; por ello, el impacto del AG debe interpretarse como una calibración heurística de pesos y no como una mejora cuantificada automáticamente por el sistema.
 
 \subsubsection{Coherencia con Datos Históricos}
 
-La validación de coherencia compara, para cada macro-zona, el nivel de riesgo diagnosticado por el sistema con el ranking histórico de incidentes. Un sistema bien calibrado debe producir:
+La coherencia con los datos históricos se observa en dos niveles implementados en el código:
 \begin{itemize}
-    \item Correlación de Spearman $\rho \geq 0.70$ entre índice de riesgo y tasa histórica de robos por zona.
-    \item Distribuciones sintéticas Monte Carlo que contengan los valores históricos dentro del intervalo de credibilidad del 95\%.
-    \item Activación de al menos el 80\% de las reglas difusas definidas en algún escenario de las zonas de alto riesgo.
+    \item comparación visual entre medias, mínimos y máximos históricos y simulados en las gráficas Monte Carlo;
+    \item resumen numérico de medias históricas y simuladas, especialmente para la variable de robos, dentro del reporte HTML y de la salida por consola.
 \end{itemize}
+
+No se implementan actualmente métricas automáticas como correlación de Spearman, intervalos de credibilidad bayesianos ni cobertura sistemática de las reglas explicativas generadas.
 
 \subsubsection{Visualizaciones Generadas}
 
 El sistema produce los siguientes artefactos digitales:
 
 \begin{itemize}
-    \item \textbf{Mapas interactivos HTML (Folium):} Grilla $30 \times 30$ superpuesta sobre la cartografía real de Ambato. Cada celda está coloreada según su nivel de riesgo (verde $\leq 33$, amarillo 33–66, rojo $\geq 66$). Los mapas permiten zoom, pan y consulta de atributos por celda (nombre del barrio, índice de riesgo, macro-zona, reglas activadas).
-    \item \textbf{Gráficas PNG de simulación Monte Carlo:} Histogramas por variable y macro-zona comparando distribuciones históricas reales vs. sintéticas (1.000 escenarios). Se superponen: media histórica (línea verde), media simulada (línea azul), rango intercuartílico (banda sombreada) y límites min/max (líneas rojas).
-    \item \textbf{Reportes textuales:} Volcado en consola de diagnósticos por zona, reglas extraídas, estadísticas descriptivas y trazabilidad del proceso de inferencia.
+    \item \textbf{Mapa HTML interactivo (Folium):} Cada celda se representa con un \texttt{CircleMarker} coloreado según su nivel de riesgo e incluye un \textit{popup} con factores principales y regla explicativa.
+    \item \textbf{Gráficas PNG de datos históricos reales:} El programa exporta visualizaciones de los 12 meses del CSV para las cuatro macro-zonas.
+    \item \textbf{Gráficas PNG de Monte Carlo:} Histogramas por variable y macro-zona comparando distribuciones históricas y sintéticas (1000 simulaciones para visualización).
+    \item \textbf{Reporte HTML consolidado:} Resume conteos por nivel, datos históricos, estadísticas Monte Carlo y detalle de zonas analizadas.
+    \item \textbf{Salida por consola:} Presenta trazabilidad paso a paso del diagnóstico detallado cuando se analiza una zona o un conjunto circular.
 \end{itemize}
 
 % -----------------------------------------------------------
@@ -682,8 +601,10 @@ El sistema produce los siguientes artefactos digitales:
     \item \textbf{Ausencia de validación de campo:} Los diagnósticos generados por el sistema no han sido contrastados sistemáticamente con datos de intervención policial real ni con la percepción de los habitantes de cada barrio. Sin esta validación, el sistema constituye un insumo de apoyo a la decisión, no una verdad operacional.
     \item \textbf{Simplificación de la realidad urbana:} La discretización en una grilla regular $30 \times 30$ ignora la heterogeneidad interna de las celdas, que pueden contener microentornos con dinámicas muy distintas (zonas comerciales vs. residenciales dentro de la misma celda).
     \item \textbf{Dependencia de conectividad a OpenStreetMap:} La descarga del grafo vial requiere acceso a internet al momento de ejecución. En redes inestables, esto puede interrumpir el procesamiento o generar grafos incompletos.
-    \item \textbf{Limitaciones del algoritmo genético con espacio pequeño:} Con solo 5 genes, el espacio de búsqueda es relativamente simple. La ventaja del AG se vería amplificada en versiones extendidas del sistema que incluyan más variables o parámetros de las funciones de membresía.
+    \item \textbf{Reglas explicativas no condicionadas por la celda actual:} Apriori y PRISM se ejecutan sobre un dataset sintético interno generado en el propio módulo de reglas, por lo que la explicación textual no surge directamente del historial particular de la celda analizada.
+    \item \textbf{Variables auxiliares no integradas al score difuso:} El pipeline genera métricas de densidad vial e intersecciones, pero estas no participan en el cálculo del clasificador difuso actual.
     \item \textbf{Síntesis de características desde distribución normal:} El muestreo Monte Carlo asume que los incidentes siguen una distribución normal por macro-zona, lo cual puede ser inexacto para variables con distribuciones sesgadas o bimodales (por ejemplo, robos con alta variabilidad estacional).
+    \item \textbf{Ausencia de semilla fija:} La simulación Monte Carlo y varios pasos del algoritmo genético son estocásticos; por ello, dos ejecuciones sucesivas pueden producir resultados distintos.
 \end{enumerate}
 
 % -----------------------------------------------------------
@@ -691,15 +612,15 @@ El sistema produce los siguientes artefactos digitales:
 % -----------------------------------------------------------
 
 \begin{enumerate}
-    \item Se diseñó e implementó exitosamente un sistema integral de diagnóstico de seguridad ciudadana que integra, de forma coherente y complementaria, aprendizaje basado en reglas (Apriori/PRISM), lógica difusa Mamdani y algoritmos genéticos, aplicado a la clasificación de zonas de riesgo urbano en la ciudad de Ambato.
+    \item Se implementó un sistema integral de diagnóstico de seguridad ciudadana que combina escenarios Monte Carlo, clasificación difusa, optimización genética de pesos, análisis de conectividad BFS y reglas explicativas Apriori/PRISM para la ciudad de Ambato.
     
-    \item La lógica difusa demostró ser el paradigma más adecuado para modelar la imprecisión inherente a los conceptos de riesgo urbano, permitiendo clasificar las 900 zonas analizadas en niveles interpretables (bajo, medio, alto) mediante reglas lingüísticas transparentes y auditables, sin la artificiosidad de los umbrales booleanos.
+    \item La lógica difusa del proyecto se concreta en una agregación ponderada de funciones de membresía triangulares y sigmoides, lo que permite producir un score continuo y una etiqueta interpretable de riesgo sin depender de un clasificador estrictamente booleano.
     
-    \item El algoritmo genético mejoró la calibración del sistema al optimizar los pesos de ponderación de las cinco variables de entrada. La función de fitness multiobjetivo diseñada —que combina exactitud de clasificación y coherencia con los patrones históricos— permitió equilibrar la precisión diagnóstica con la validez empírica de los resultados.
+    \item El algoritmo genético aporta una calibración heurística de los pesos de las cinco variables. Su fitness está basado en precisión de clasificación sobre un dataset sintético interno, por lo que su principal contribución en esta versión es ajustar ponderaciones de manera automática entre ejecuciones.
     
-    \item La integración de tres paradigmas complementarios de IA (reglas, difusa, genético) incrementó la robustez y trazabilidad del sistema respecto a enfoques aislados: las reglas Apriori/PRISM aportan interpretabilidad explícita, la lógica difusa maneja incertidumbre gradual, y el algoritmo genético provee optimización adaptativa sin supuestos restrictivos.
+    \item Las reglas Apriori y PRISM funcionan en el sistema como una capa explicativa posterior al diagnóstico. Aunque no determinan directamente el score final, sí aportan una interpretación textual legible del resultado para niveles medio y alto.
     
-    \item El sistema produce artefactos de salida —mapas HTML interactivos georreferenciados y gráficas de simulación Monte Carlo— que median una comunicación efectiva entre los resultados técnicos del sistema de IA y los tomadores de decisión en seguridad ciudadana, facilitando la identificación de focos críticos y la priorización de intervenciones.
+    \item El sistema produce artefactos útiles para la comunicación de resultados: mapa HTML georreferenciado, gráficas de históricos reales, gráficas Monte Carlo, salida detallada por consola y un reporte HTML consolidado para revisión posterior.
 \end{enumerate}
 
 % -----------------------------------------------------------
@@ -711,7 +632,7 @@ El sistema produce los siguientes artefactos digitales:
     
     \item \textbf{Validación de campo con datos reales:} Contrastar sistemáticamente los diagnósticos del sistema con registros de intervención policial verificados (partes de novedades, registros de detenciones) para cuantificar la precisión real del sistema y corregir sesgos sistemáticos en los datos históricos.
     
-    \item \textbf{Extensión del cromosoma al AG:} Ampliar el espacio de optimización del algoritmo genético para incluir también los parámetros de las funciones de membresía (puntos $[a,b,c,d]$ de los trapezoides), incrementando de 5 a $\approx 30$ genes y aprovechando plenamente la capacidad de búsqueda del AG en espacios de alta dimensión.
+    \item \textbf{Extensión del cromosoma al AG:} Ampliar el espacio de optimización del algoritmo genético para incluir también los parámetros de las funciones de membresía triangulares y sigmoides, incrementando el número de genes y aprovechando mejor la capacidad de búsqueda del AG en espacios de mayor dimensión.
     
     \item \textbf{Incorporación de variables adicionales:} Integrar nuevas fuentes de información como la densidad comercial por zona, el nivel socioeconómico del barrio, la iluminación pública o la presencia de cámaras de vigilancia, para enriquecer el diagnóstico con factores contextuales de relevancia en criminología urbana.
     
@@ -745,15 +666,15 @@ La siguiente figura ilustra la arquitectura general del sistema, mostrando cómo
 \begin{tabular}{|p{14cm}|}
 \hline
 \textbf{Arquitectura del Sistema de Diagnóstico de Riesgo Urbano:} \\
-- \textbf{Entrada:} OpenStreetMap (grafo vial) + CSV histórico (5 variables × 4 zonas × 12 meses) \\
-- \textbf{Preprocesamiento:} Construcción de grilla 30×30 + Geocodificación inversa + Asignación de macro-zonas \\
-- \textbf{Motor de IA:} Procesa 900 zonas realizando para cada una: \\
-  \quad • Simulación Monte Carlo (1.000 escenarios sintéticos por macro-zona) \\
-  \quad • Optimización con algoritmo genético (50 gen, 30 indiv, 10\% mutación) \\
-  \quad • Clasificación con lógica difusa Mamdani (funciones trapezoidales) \\
-  \quad • Extracción de reglas Apriori/PRISM \\
-  \quad • Análisis de conectividad BFS (radio 500 m) \\
-- \textbf{Salida:} Mapas HTML (Folium) + Gráficas PNG (Matplotlib) + Reportes textuales \\
+- \textbf{Entrada:} OpenStreetMap (grafo vial) + CSV histórico (12 meses × 4 macro-zonas, 5 variables por fila) \\
+- \textbf{Preprocesamiento:} Construcción de grilla 30×30 + Geocodificación inversa con caché + Asignación de macro-zonas por cuadrantes \\
+- \textbf{Motor de IA:} Procesa cada zona realizando: \\
+  \quad • Generación de un escenario Monte Carlo coherente con la macro-zona \\
+  \quad • Optimización con algoritmo genético (50 generaciones, 30 individuos) \\
+  \quad • Clasificación difusa con funciones triangulares y sigmoides \\
+  \quad • Ajuste por conectividad BFS (radio 500 m) \\
+  \quad • Regla explicativa Apriori/PRISM según el nivel final \\
+- \textbf{Salida:} Mapas HTML (Folium) + Gráficas PNG + Reporte HTML + Reportes textuales \\
 - \textbf{Tiempo total:} 5--10 minutos por ciudad \\
 \hline
 \end{tabular}
@@ -774,19 +695,18 @@ El siguiente diagrama detalla el flujo secuencial de procesamiento para cada una
 1. OpenStreetMap → Descargar grafo vial \\
 2. Grafo + Bounding Box → Construir grilla 30×30 con nombres de barrios \\
 3. CSV histórico → Calcular $\mu$, $\sigma$, min, max por variable y macro-zona \\
-4. Monte Carlo → Generar 1.000 escenarios sintéticos por macro-zona \\
-5. Algoritmo Genético → Optimizar pesos $\mathbf{w}$ por macro-zona \\
-6. Para cada celda $(i,j)$ de la grilla: \\
-   \quad a. Obtener macro-zona (N/S/E/O) \\
-   \quad b. Generar características sintéticas desde $\mathcal{N}(\mu_{zona}, \sigma_{zona})$ \\
-   \quad c. Calcular índice de riesgo ponderado con pesos optimizados \\
-   \quad d. Aplicar motor difuso Mamdani → índice de riesgo $\in [0,100]$ \\
-   \quad e. Extraer reglas Apriori/PRISM \\
-   \quad f. Analizar conectividad BFS (radio 500 m) \\
-   \quad g. Combinar salidas y asignar nivel de riesgo (Bajo/Medio/Alto) \\
+4. Configurar centro del mapa → Definir macro-zonas Norte/Oeste/Este/Sur \\
+5. Para cada celda $(i,j)$ de la grilla: \\
+   \quad a. Obtener macro-zona según cuadrante del centro del mapa \\
+   \quad b. Generar un escenario sintético único mediante Monte Carlo acotado \\
+   \quad c. Crear pesos $\mathbf{w}$ con el algoritmo genético \\
+   \quad d. Aplicar clasificador difuso → score y nivel preliminar \\
+   \quad e. Ajustar el score con conectividad BFS (radio 500 m) \\
+   \quad f. Obtener factores principales y regla explicativa \\
+   \quad g. Guardar nivel final (Bajo/Medio/Alto) \\
 7. Agregar todas las zonas a estructura de datos \\
-8. Generar mapa HTML interactivo con código de colores \\
-9. Exportar gráficas de simulación Monte Carlo por macro-zona \\
+8. Generar mapa HTML interactivo con código de colores y \textit{popup} explicativo \\
+9. Exportar gráficas históricas, gráficas Monte Carlo y reporte HTML \\
 \hline
 \end{tabular}
 \end{center}

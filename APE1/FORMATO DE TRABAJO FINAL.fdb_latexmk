@@ -1,10 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1776173515.74428 "/home/david/Desktop/projects/university/ai/seguridad/APE1/FORMATO DE TRABAJO FINAL.tex" "FORMATO DE TRABAJO FINAL.pdf" "FORMATO DE TRABAJO FINAL" 1776173516.72522 0
-  "/home/david/Desktop/projects/university/ai/seguridad/APE1/FORMATO DE TRABAJO FINAL.tex" 1776173515.49574 51473 8cbd707df952541570bdf7815af38a4a ""
+["pdflatex"] 1776183376.62801 "FORMATO DE TRABAJO FINAL.tex" "FORMATO DE TRABAJO FINAL.pdf" "FORMATO DE TRABAJO FINAL" 1776183378.60525 0
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1775415801 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/share/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1775415801 2900 1537cc8184ad1792082cd229ecc269f4 ""
-  "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx0600.tfm" 1775415801 3584 ad9fcbc26a2a7bccd6d08b0a5792fbe0 ""
-  "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx0800.tfm" 1775415801 3584 269b66e921ba58750c12f7f1c8ea3ebd ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1095.tfm" 1775415801 3584 21b378cca2e40816b0e6d74a4dc98f04 ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1200.tfm" 1775415801 3584 402da0b29eafbad07963b1224b222f18 ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecbx1440.tfm" 1775415801 3584 13049b61b922a28b158a38aeff75ee9b ""
@@ -17,7 +14,6 @@
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecti0900.tfm" 1775415801 3072 a603fa6d934ebc72197ed1c389943d86 ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ecti1095.tfm" 1775415801 3072 b73d2778cc3af44970de4de5e032d7f6 ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/ectt1095.tfm" 1775415801 1536 a988bfe554c1f79514bd46d13c3c64ce ""
-  "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/tcbx1095.tfm" 1775415801 1536 0adca69c597a47fe7664bf81057bb53b ""
   "/usr/share/texmf-dist/fonts/tfm/jknappen/ec/tcrm1095.tfm" 1775415801 1536 02c06700a42be0f5a28664c7273f82e7 ""
   "/usr/share/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1775415801 1004 54797486969f23fa377b128694d548df ""
   "/usr/share/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex8.tfm" 1775415801 988 bdf658c3bfc2d96d3c8b02cfc1c94c20 ""
@@ -41,10 +37,8 @@
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb" 1775415801 34811 78b52f49e893bcba91bd7581cdc144c0 ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb" 1775415801 30251 6afa5cb1d0204815a708a080681d4674 ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb" 1775415801 36299 5f9df58c2139e7edcf37c8fca4bd384d ""
-  "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb" 1775415801 37166 8ab3487cbe3ab49ebce74c29ea2418db ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb" 1775415801 35469 70d41d2b9ea31d5d813066df7c99281c ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1775415801 35752 024fb6c41858982481f6968b5fc26508 ""
-  "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb" 1775415801 32734 69e00a6b65cedb993666e42eedb3d48f ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1775415801 32726 0a1aea6fcd6468ee2cf64d891f5c43c8 ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1775415801 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb" 1775415801 32626 4f5c1b83753b1dd3a97d1b399a005b4b ""
@@ -128,9 +122,9 @@
   "/usr/share/texmf-dist/web2c/texmf.cnf" 1775415801 43569 fd570f2fa160877d211e859f687312ba ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1775710428 325445 e037c2d0d08ad8cbac81cfa7969967b5 ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1775710401 2349415 9da056acc13825da220a9c93d9e3d274 ""
-  "FORMATO DE TRABAJO FINAL.aux" 1776173516.59291 10312 889fa6b656014543521adcff74ca3a4f "pdflatex"
-  "FORMATO DE TRABAJO FINAL.out" 1776173516.59442 10210 1e6840150dcb58e93d98997b09e36877 "pdflatex"
-  "FORMATO DE TRABAJO FINAL.tex" 1776173515.49574 51473 8cbd707df952541570bdf7815af38a4a ""
+  "FORMATO DE TRABAJO FINAL.aux" 1776183378.30758 9300 2ca3eaf99a45e670269ea1f52b11d5f5 "pdflatex"
+  "FORMATO DE TRABAJO FINAL.out" 1776183378.31358 9668 7dbfe77063fb4cb9e3dc9f7854244379 "pdflatex"
+  "FORMATO DE TRABAJO FINAL.tex" 1776183373.04769 48186 b5ceb91bb07760851be8d96776aaffb9 ""
   "picture/logoSW2026.pdf" 1776105648 80955 df89e601ed8b8d09ec3ec464529370ae ""
   (generated)
   "FORMATO DE TRABAJO FINAL.aux"
