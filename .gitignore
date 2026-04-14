@@ -77,8 +77,8 @@ Desktop.ini
 # ARCHIVOS DEL PROYECTO
 # ============================================================================
 
-# Mapas HTML generados (pueden ser muy grandes)
-output/*.html
+# Salidas generadas por el sistema
+output/
 
 # Caché de mapas OSM (opcional: descomentar si no quieres versionar)
 # data/cache/*.json
