@@ -1,6 +1,4 @@
 """
-Paquete algoritmos - Algoritmos de IA para diagnóstico de seguridad ciudadana
-
 Módulos:
 --------
 - busqueda: Algoritmos de búsqueda en grafos (BFS, DFS, A*)
