@@ -1,11 +1,5 @@
-# ============================================================================
-# REQUIREMENTS.TXT - Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
-# ============================================================================
-# 
 # Instalación:
 #   pip install -r requirements.txt
-#
-# ============================================================================
 
 # Mapas y grafos urbanos
 osmnx>=1.5.0

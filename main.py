@@ -13,9 +13,29 @@ Este sistema utiliza 7 algoritmos de IA para clasificar zonas urbanas:
 
 import sys
 import os
+import importlib.util
+import subprocess
 import folium
 import matplotlib
-matplotlib.use('TkAgg')
+
+
+def _configurar_backend_matplotlib():
+    """
+    Configura un backend de matplotlib compatible con el entorno actual.
+
+    - Usa TkAgg si tkinter está disponible.
+    - Hace fallback a Agg cuando no existe soporte gráfico Tk.
+    """
+    tkinter_disponible = importlib.util.find_spec("_tkinter") is not None
+    if tkinter_disponible:
+        matplotlib.use('TkAgg')
+        return True
+
+    matplotlib.use('Agg')
+    return False
+
+
+TKINTER_DISPONIBLE = _configurar_backend_matplotlib()
 import matplotlib.pyplot as plt
 
 from config import GRID_SIZE, OUTPUT_DIR, COLORES_RIESGO
@@ -43,6 +63,33 @@ def mostrar_banner():
     print("  📍 Universidad Técnica de Ambato")
     print("  🧠 7 Algoritmos de IA: BFS, DFS, A*, AG, Apriori, PRISM, Fuzzy")
     print("="*70 + "\n")
+    if not TKINTER_DISPONIBLE:
+        print("  ⚠️  tkinter no está disponible: se usará backend gráfico no interactivo (Agg)")
+        print("  ℹ️  El modo 1 y la generación de PNG/HTML sí pueden ejecutarse normalmente.\n")
+
+
+def _abrir_archivo(path):
+    """
+    Abre un archivo con la aplicación predeterminada del sistema operativo.
+
+    Retorna:
+    - (True, None) si se abrió correctamente.
+    - (False, "mensaje") si no se pudo abrir.
+    """
+    try:
+        if sys.platform.startswith("win"):
+            os.startfile(path)
+        elif sys.platform == "darwin":
+            subprocess.run(["open", path], check=True)
+        else:
+            subprocess.run(["xdg-open", path], check=True)
+        return True, None
+    except FileNotFoundError as e:
+        return False, f"No se encontró el programa para abrir archivos: {e}"
+    except subprocess.CalledProcessError as e:
+        return False, f"El visor predeterminado devolvió error: {e}"
+    except Exception as e:
+        return False, str(e)
 
 
 def obtener_ciudad_ambato():
@@ -107,10 +154,9 @@ def generar_visualizaciones_historicos_reales(gestor):
             print("\n  🖼️  Abriendo gráficas...")
             for archivo in archivos_generados:
                 ruta = os.path.join(OUTPUT_DIR, archivo)
-                try:
-                    os.startfile(ruta)
-                except Exception as e:
-                    print(f"  ⚠️  No se pudo abrir {archivo}: {e}")
+                ok, error = _abrir_archivo(ruta)
+                if not ok:
+                    print(f"  ⚠️  No se pudo abrir {archivo}: {error}")
 
 
 def generar_visualizaciones_historicos(gestor):
@@ -213,12 +259,10 @@ def generar_visualizaciones_historicos(gestor):
             for zona, res in resultados_zonas.items():
                 ruta = os.path.join(OUTPUT_DIR, res['archivo'])
                 if os.path.exists(ruta):
-                    try:
-                        # Abrir con el visor de imágenes predeterminado
-                        os.startfile(ruta)
-                        time.sleep(0.5)  # Pequeña pausa entre cada imagen
-                    except Exception as e:
-                        print(f"     ⚠️  No se pudo abrir {res['archivo']}: {e}")
+                    ok, error = _abrir_archivo(ruta)
+                    if not ok:
+                        print(f"     ⚠️  No se pudo abrir {res['archivo']}: {error}")
+                    time.sleep(0.5)  # Pequeña pausa entre cada imagen
             
             print(f"  ✓ Visualizaciones abiertas")
         else:
@@ -425,6 +469,11 @@ def solicitar_zona(grid_size, G, grid, ciudad):
     Interfaz interactiva para seleccionar el CENTRO del círculo de análisis.
     Retorna: (fila_centro, columna_centro, lista_de_zonas_en_circulo, radio_metros)
     """
+    if not TKINTER_DISPONIBLE:
+        raise RuntimeError(
+            "El modo 2 requiere tkinter/Tk y no está disponible en este entorno."
+        )
+
     import tkinter as tk
     from tkinter import ttk
     import math
@@ -814,6 +863,10 @@ def main():
         else:
             print(f"  ⚠️  No se encontraron datos históricos (se usarán datos aleatorios)")        # 3. Seleccionar modo de análisis
         modo = solicitar_modo_analisis()
+        if modo == '2' and not TKINTER_DISPONIBLE:
+            print("\n  ⚠️  El modo 2 no está disponible porque falta tkinter/Tk.")
+            print("  ▶️  Se continuará automáticamente con el modo 1 (análisis completo).")
+            modo = '1'
         datos_reporte['modo'] = 'Análisis de Zona Circular' if modo == '2' else 'Análisis Completo'
 
         # 4. Cargar mapa
@@ -993,10 +1046,13 @@ def main():
             
             # Abrir automáticamente en el navegador
             print(f"  🌐 Abriendo reporte en el navegador...")
-            import webbrowser
             ruta_absoluta = os.path.abspath(ruta_reporte)
-            webbrowser.open('file:///' + ruta_absoluta.replace('\\', '/'))
-            print(f"  ✓ Reporte abierto\n")
+            ok, error = _abrir_archivo(ruta_absoluta)
+            if ok:
+                print(f"  ✓ Reporte abierto\n")
+            else:
+                print(f"  ⚠️  No se pudo abrir automáticamente: {error}")
+                print(f"  📁 Puedes abrirlo manualmente en: {ruta_absoluta}\n")
             
         except Exception as e:
             print(f"\n  ⚠️  No se pudo generar el reporte: {e}")

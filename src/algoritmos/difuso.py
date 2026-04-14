@@ -15,10 +15,13 @@ Cada variable tiene asignada una función según su comportamiento esperado:
   llamadas_emergencias → SIGMA       (crece rápido al inicio, satura)
 """
 import math
+import importlib.util
 
-# Configurar matplotlib para Windows con backend TkAgg (más estable)
 import matplotlib
-matplotlib.use('TkAgg')  # Backend compatible con tkinter en Windows
+if importlib.util.find_spec("_tkinter") is not None:
+    matplotlib.use('TkAgg')
+else:
+    matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 # Lista global para mantener referencias a las figuras abiertas
@@ -407,8 +410,6 @@ def mantener_graficas_abiertas():
                 pass
     else:
         print("\n  ℹ️  No hay gráficas de membresía para mantener abiertas")
-
-
 def graficar_defuzzificacion(mu_bajo, mu_medio, mu_alto, score_final, nombre_zona=""):
     """Genera gráfica del proceso de defuzzificación por centroide.
     
@@ -532,4 +533,3 @@ def graficar_defuzzificacion(mu_bajo, mu_medio, mu_alto, score_final, nombre_zon
     print(f"     📊 Gráfica de defuzzificación abierta para: {nombre_zona}")
     print(f"     🎯 Centroide calculado: {score_final:.2f}")
     print(f"     📐 Grados de activación: Bajo={mu_bajo:.2f}, Medio={mu_medio:.2f}, Alto={mu_alto:.2f}")
-
