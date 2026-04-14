@@ -1,0 +1,12 @@
+flowchart LR
+    Start(["Inicio"]) --> Load["1. Cargar Mapa OSM"]
+    Load --> Grid["2. Construir Grilla 30x30"]
+    Grid --> Process["3. Para cada zona:"]
+    Process --> Char["- Caracteristicas"]
+    Char --> Genetic["4. Optimizar con Genetico"]
+    Genetic --> Fuzzy["5. Clasificar Difuso"]
+    Fuzzy --> Rules["6. Aplicar Reglas"]
+    Rules --> Connect["7. Conectividad BFS"]
+    Connect --> Viz["8. Generar Viz"]
+    Viz --> Output["9. Mapas y Graficas"]
+    Output --> End(["Fin"])
