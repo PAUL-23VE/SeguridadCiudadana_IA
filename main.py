@@ -1,9 +1,4 @@
 """
-main.py
-=======
-Sistema de Diagnóstico de Zonas de Peligro Urbano con IA
-Universidad Técnica de Ambato - Inteligencia Artificial
-
 Este sistema utiliza 7 algoritmos de IA para clasificar zonas urbanas:
 - BFS, DFS, A* (búsqueda y conectividad)
 - Algoritmo Genético (optimización)
@@ -241,11 +236,11 @@ def generar_visualizaciones_historicos(gestor):
         # Mensaje informativo
         print(f"\n  💡 VISUALIZACIONES GENERADAS:")
         print(f"     Cada gráfica muestra:")
-        print(f"     • 📊 Histogramas de 5 variables (Robos, Microtráfico, etc.)")
-        print(f"     • 🟨 Área sombreada = Rango histórico válido")
-        print(f"     • 🟢 Línea verde = Media histórica")
-        print(f"     • 🔵 Línea azul = Media simulada (Monte Carlo)")
-        print(f"     • 🔴 Líneas rojas = Límites min/max")
+        print(f"     • 📊 Barras agrupadas para 5 variables (Robos, Microtráfico, etc.)")
+        print(f"     • 🔹 Grupo 1 = Mínimo histórico vs mínimo simulado")
+        print(f"     • 🔹 Grupo 2 = Media histórica vs media simulada")
+        print(f"     • 🔹 Grupo 3 = Máximo histórico vs máximo simulado")
+        print(f"     • 🧪 Cada zona usa 1000 simulaciones Monte Carlo")
         
         # Preguntar si quiere abrir las imágenes
         print(f"\n  ❓ ¿Deseas abrir las visualizaciones ahora?")
