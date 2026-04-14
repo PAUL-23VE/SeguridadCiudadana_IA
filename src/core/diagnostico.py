@@ -1,15 +1,12 @@
 """
-diagnostico.py
-==============
-Modulo para diagnostico de zonas usando logica difusa, algoritmo genetico,
-Apriori, PRISM, analisis de conectividad urbana y simulacion Monte Carlo.
+Modulo para diagnostico de zonas usando logica difusa, algoritmo genetico, Apriori, PRISM, analisis de conectividad urbana y simulacion Monte Carlo.
 """
+
 import numpy as np
 from ..algoritmos.difuso import (
     clasificar_difuso, 
     describir_membresia, 
     graficar_membresia, 
-    graficar_membresia_consecuente,
     TIPO_MEMBRESIA
 )
 from ..algoritmos.genetico import optimizar_pesos

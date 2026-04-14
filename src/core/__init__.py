@@ -1,6 +1,3 @@
-"""
-Paquete core - Módulos principales del sistema
-"""
 from .diagnostico import diagnosticar_zona, diagnostico_masivo
 from .mapa import cargar_mapa, construir_grid, visualizar_grafo
 from .visualizacion import mostrar_mapa_interactivo

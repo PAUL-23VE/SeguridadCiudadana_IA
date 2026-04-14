@@ -1,6 +1,4 @@
 """
-busqueda.py
-===========
 Algoritmos de búsqueda en grafos: BFS, DFS, A*
 
 Estos algoritmos exploran el grafo del mapa urbano OSM para encontrar
