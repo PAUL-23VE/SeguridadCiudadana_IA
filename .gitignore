@@ -127,6 +127,8 @@ EXPLICACION_*.md
 .env.local
 secrets.py
 config.local.py
+.codex
+.codex/
 
 # ============================================================================
 # ARCHIVOS TEMPORALES
@@ -136,3 +138,12 @@ config.local.py
 *.backup
 *~
 mapa_*.html
+
+# ============================================================================
+# LATEX Y DOCUMENTACIÓN GENERADA
+# ============================================================================
+*.aux
+*.fdb_latexmk
+*.fls
+*.out
+*.synctex.gz
