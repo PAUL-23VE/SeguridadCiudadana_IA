@@ -12,7 +12,7 @@ Módulos:
 """
 
 # Algoritmos de búsqueda en grafos
-from .busqueda import bfs, dfs, astar, calcular_distancia_haversine, heuristica_haversine
+from .busqueda import bfs, dfs, a_estrella, astar, calcular_distancia_haversine, heuristica_haversine
 
 # Análisis de conectividad urbana
 from .conectividad import analizar_conectividad_zona
@@ -49,9 +49,9 @@ from .montecarlo import (
 
 __all__ = [
     # Búsqueda
-    'bfs', 'dfs', 'astar', 'calcular_distancia_haversine', 'heuristica_haversine',
+    'bfs', 'dfs', 'a_estrella', 'astar', 'calcular_distancia_haversine', 'heuristica_haversine',
     # Conectividad
-    'analizar_conectividad_zona',    # Genético
+    'analizar_conectividad_zona',# Genético
     'optimizar_pesos', 'calcular_fitness', 'crear_individuo',
     # Reglas
     'reglas_apriori', 'reglas_prism', 'obtener_regla_explicativa', 'discretizar_valor', 'apriori',

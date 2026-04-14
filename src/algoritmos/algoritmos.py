@@ -10,11 +10,10 @@ Usa directamente los módulos especializados:
 
 Importa desde este archivo solo si necesitas compatibilidad con código antiguo.
 """
-
-# Re-exportar funciones de los nuevos módulos para compatibilidad
 from .busqueda import (
     bfs, 
     dfs, 
+    a_estrella,
     astar, 
     calcular_distancia_haversine, 
     heuristica_haversine
@@ -25,6 +24,7 @@ from .conectividad import analizar_conectividad_zona
 __all__ = [
     'bfs',
     'dfs', 
+    'a_estrella',
     'astar',
     'calcular_distancia_haversine',
     'heuristica_haversine',

@@ -48,7 +48,7 @@ def calcular_distancia_haversine(lat1, lon1, lat2, lon2):
     return distancia
 
 
-def bfs(G, origen, destino, verbose=False):
+def bfs(G, origen, destino, mostrar_mensajes=False):
     """
     Breadth-First Search (Búsqueda en Anchura)
     
@@ -63,14 +63,14 @@ def bfs(G, origen, destino, verbose=False):
         Nodo de inicio
     destino : nodo
         Nodo objetivo
-    verbose : bool
-        Si True, imprime información del proceso
+    mostrar_mensajes : bool
+        Si True, imprime información del proceso en consola
     
     Retorna
     -------
     list : lista de nodos que forman el camino, o [] si no existe
     """
-    if verbose:
+    if mostrar_mensajes:
         print("\n  [BFS] Iniciando búsqueda en anchura...")
     
     visitados = set()
@@ -83,8 +83,8 @@ def bfs(G, origen, destino, verbose=False):
         nodos_explorados += 1
         
         if nodo == destino:
-            if verbose:
-                print(f"  [BFS] ✅ Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
+            if mostrar_mensajes:
+                print(f"  [BFS] Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
             return camino
             
         if nodo not in visitados:
@@ -94,12 +94,12 @@ def bfs(G, origen, destino, verbose=False):
                 nuevo_camino.append(vecino)
                 cola.append(nuevo_camino)
     
-    if verbose:
-        print(f"  [BFS] ❌ No existe camino (explorados: {nodos_explorados})")
+    if mostrar_mensajes:
+        print(f"  [BFS] No existe camino (explorados: {nodos_explorados})")
     return []
 
 
-def dfs(G, origen, destino, verbose=False):
+def dfs(G, origen, destino, mostrar_mensajes=False):
     """
     Depth-First Search (Búsqueda en Profundidad)
     
@@ -114,14 +114,14 @@ def dfs(G, origen, destino, verbose=False):
         Nodo de inicio
     destino : nodo
         Nodo objetivo
-    verbose : bool
-        Si True, imprime información del proceso
+    mostrar_mensajes : bool
+        Si True, imprime información del proceso en consola
     
     Retorna
     -------
     list : lista de nodos que forman el camino, o [] si no existe
     """
-    if verbose:
+    if mostrar_mensajes:
         print("\n  [DFS] Iniciando búsqueda en profundidad...")
     
     visitados = set()
@@ -134,8 +134,8 @@ def dfs(G, origen, destino, verbose=False):
         nodos_explorados += 1
         
         if nodo == destino:
-            if verbose:
-                print(f"  [DFS] ✅ Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
+            if mostrar_mensajes:
+                print(f"  [DFS] Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
             return camino
             
         if nodo not in visitados:
@@ -145,8 +145,8 @@ def dfs(G, origen, destino, verbose=False):
                 nuevo_camino.append(vecino)
                 pila.append(nuevo_camino)
     
-    if verbose:
-        print(f"  [DFS] ❌ No existe camino (explorados: {nodos_explorados})")
+    if mostrar_mensajes:
+        print(f"  [DFS] No existe camino (explorados: {nodos_explorados})")
     return []
 
 
@@ -168,14 +168,16 @@ def heuristica_haversine(G, nodo1, nodo2):
     -------
     float : distancia en kilómetros
     """
-    lat1, lon1 = G.nodes[nodo1]['y'], G.nodes[nodo1]['x']
-    lat2, lon2 = G.nodes[nodo2]['y'], G.nodes[nodo2]['x']
+    lat1 = G.nodes[nodo1]['y']
+    lon1 = G.nodes[nodo1]['x']
+    lat2 = G.nodes[nodo2]['y']
+    lon2 = G.nodes[nodo2]['x']
     return calcular_distancia_haversine(lat1, lon1, lat2, lon2) / 1000  # Convertir a km
 
 
-def astar(G, origen, destino, verbose=False):
+def a_estrella(G, origen, destino, mostrar_mensajes=False):
     """
-    A* (A-Star) - Búsqueda Informada con Heurística de Haversine
+    A* (A-Estrella) - Búsqueda Informada con Heurística de Haversine
     
     Usa la distancia geográfica real como heurística para encontrar
     el camino más corto en distancia (no en número de nodos).
@@ -188,14 +190,13 @@ def astar(G, origen, destino, verbose=False):
         Nodo de inicio
     destino : nodo
         Nodo objetivo
-    verbose : bool
-        Si True, imprime información del proceso
-    
-    Retorna
+    mostrar_mensajes : bool
+        Si True, imprime información del proceso en consola
+      Retorna
     -------
     list : lista de nodos que forman el camino óptimo, o [] si no existe
     """
-    if verbose:
+    if mostrar_mensajes:
         print("\n  [A*] Iniciando búsqueda informada con heurística Haversine...")
     
     frontera = [(0, [origen])]
@@ -212,7 +213,7 @@ def astar(G, origen, destino, verbose=False):
                 heuristica_haversine(G, camino[i], camino[i+1]) 
                 for i in range(len(camino)-1)
             )
-            if verbose:
+            if mostrar_mensajes:
                 print(f"  [A*] ✅ Camino óptimo encontrado! ({len(camino)} nodos, {distancia_total:.2f} km, explorados: {nodos_explorados})")
             return camino
             
@@ -224,6 +225,10 @@ def astar(G, origen, destino, verbose=False):
                 heur = heuristica_haversine(G, vecino, destino)
                 heapq.heappush(frontera, (costo + 1 + heur, nuevo_camino))
     
-    if verbose:
+    if mostrar_mensajes:
         print(f"  [A*] ❌ No existe camino (explorados: {nodos_explorados})")
     return []
+
+
+# Alias para compatibilidad con código existente
+astar = a_estrella

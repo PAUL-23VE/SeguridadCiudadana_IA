@@ -10,6 +10,8 @@ distribuciones de los datos históricos de cada macro-zona.
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from scipy import stats
+from scipy.interpolate import make_interp_spline
 
 
 def generar_datos_zona(zona, estadisticas, num_simulaciones=1):
@@ -179,13 +181,12 @@ def generar_escenario_unico(zona, estadisticas):
 
 def visualizar_simulaciones_montecarlo(zona, estadisticas, num_simulaciones=1000, mostrar=True, guardar_path=None):
     """
-    Visualiza las simulaciones Monte Carlo con histogramas y scatter plots.
+    Visualiza las simulaciones Monte Carlo con GRÁFICAS DE BARRAS CLARAS.
     
     Genera una figura con 5 subplots (uno por variable) mostrando:
-    - Histograma de la distribución de valores generados
-    - Puntos individuales (scatter) de cada valor aleatorio
-    - Líneas de referencia: media (verde), min (rojo), max (rojo)
-    - Área sombreada del rango histórico válido
+    - BARRAS AGRUPADAS: Históricos vs Simulaciones
+    - Comparación visual directa de Min, Media, Max
+    - Fácil de interpretar y entender
     
     Parámetros
     ----------
@@ -215,8 +216,7 @@ def visualizar_simulaciones_montecarlo(zona, estadisticas, num_simulaciones=1000
     >>> stats = gestor.obtener_estadisticas('Norte')
     >>> resultado = visualizar_simulaciones_montecarlo('Norte', stats, 1000)
     >>> plt.show()
-    """
-    # Generar simulaciones
+    """    # Generar simulaciones
     simulaciones = generar_datos_zona(zona, estadisticas, num_simulaciones)
     
     # Mapeo de variables
@@ -228,27 +228,30 @@ def visualizar_simulaciones_montecarlo(zona, estadisticas, num_simulaciones=1000
         ('llamadas_emergencias', 'Llamadas 911')
     ]
     
-    # Crear figura con 5 subplots (uno por variable)
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-    fig.suptitle(f'Simulación Monte Carlo - Zona {zona}\n{num_simulaciones} simulaciones', 
-                 fontsize=16, fontweight='bold')
-    
-    # Aplanar axes para iterar fácilmente
-    axes_flat = axes.flatten()
+    # Crear figura con 5 subplots EN UNA SOLA FILA (más ancho)
+    fig, axes = plt.subplots(1, 5, figsize=(22, 5))
+    fig.suptitle(f'📊 Validación Monte Carlo - Zona {zona} ({num_simulaciones} simulaciones)\nComparación: Datos Históricos vs Simulaciones', 
+                 fontsize=14, fontweight='bold', y=1.02)
     
     # Calcular resumen estadístico
     resumen = {}
     
+    # Colores profesionales
+    color_historico = '#2E86AB'  # Azul oscuro
+    color_simulado = '#A23B72'   # Rosa/magenta
+    
     for idx, (var_sistema, var_display) in enumerate(variables):
-        ax = axes_flat[idx]
+        ax = axes[idx]
         
         # Extraer valores de las simulaciones
         valores = [sim[var_sistema] for sim in simulaciones if var_sistema in sim]
         
         if not valores:
-            ax.text(0.5, 0.5, f'Sin datos para {var_display}', 
-                   ha='center', va='center', fontsize=12)
-            ax.set_title(var_display, fontsize=12, fontweight='bold')
+            ax.text(0.5, 0.5, f'Sin datos\npara\n{var_display}', 
+                   ha='center', va='center', fontsize=11, color='red')
+            ax.set_title(var_display, fontsize=11, fontweight='bold')
+            ax.set_xticks([])
+            ax.set_yticks([])
             continue
         
         # Obtener estadísticas históricas
@@ -281,47 +284,53 @@ def visualizar_simulaciones_montecarlo(zona, estadisticas, num_simulaciones=1000
             'max_historico': max_hist
         }
         
-        # --- GRÁFICA 1: Histograma + Referencias ---
+        # ═══════════════════════════════════════════════════════════════════
+        # GRÁFICA DE BARRAS AGRUPADAS (ESTILO DIAGRAMA P-V)
+        # ═══════════════════════════════════════════════════════════════════
         
-        # Crear histograma
-        n, bins, patches = ax.hist(valores, bins=30, alpha=0.6, color='steelblue', 
-                                   edgecolor='black', label='Distribución generada')
+        # Datos para las barras
+        categorias = ['Mínimo', 'Media', 'Máximo']
+        x_pos = np.arange(len(categorias))
+        width = 0.35  # Ancho de las barras
         
-        # Área sombreada del rango histórico
-        ax.axvspan(min_hist, max_hist, alpha=0.15, color='yellow', 
-                  label=f'Rango histórico [{min_hist:.0f}-{max_hist:.0f}]')
+        valores_historicos = [min_hist, media_hist, max_hist]
+        valores_simulados = [min_sim, media_sim, max_sim]
         
-        # Líneas de referencia
-        ax.axvline(media_hist, color='green', linestyle='--', linewidth=2, 
-                  label=f'Media histórica ({media_hist:.1f})')
-        ax.axvline(min_hist, color='red', linestyle=':', linewidth=1.5, 
-                  label=f'Min histórico ({min_hist:.0f})')
-        ax.axvline(max_hist, color='red', linestyle=':', linewidth=1.5, 
-                  label=f'Max histórico ({max_hist:.0f})')
+        # Crear barras agrupadas
+        barras1 = ax.bar(x_pos - width/2, valores_historicos, width, 
+                        label='Históricos', color=color_historico, alpha=0.8, edgecolor='black', linewidth=1.2)
+        barras2 = ax.bar(x_pos + width/2, valores_simulados, width, 
+                        label='Simulados (MC)', color=color_simulado, alpha=0.8, edgecolor='black', linewidth=1.2)
         
-        # Línea de media simulada
-        ax.axvline(media_sim, color='blue', linestyle='-', linewidth=2, 
-                  label=f'Media simulada ({media_sim:.1f})')
+        # Añadir valores encima de las barras
+        for i, (v_hist, v_sim) in enumerate(zip(valores_historicos, valores_simulados)):
+            # Valor histórico
+            ax.text(i - width/2, v_hist + max(valores_historicos) * 0.03, 
+                   f'{v_hist:.1f}', ha='center', va='bottom', fontsize=8, fontweight='bold', color=color_historico)
+            # Valor simulado
+            ax.text(i + width/2, v_sim + max(valores_simulados) * 0.03, 
+                   f'{v_sim:.1f}', ha='center', va='bottom', fontsize=8, fontweight='bold', color=color_simulado)
         
-        # Configurar gráfica
-        ax.set_xlabel('Valor', fontsize=10)
-        ax.set_ylabel('Frecuencia', fontsize=10)
-        ax.set_title(f'{var_display}\nμ={media_sim:.1f}, σ={std_sim:.1f}', 
-                    fontsize=12, fontweight='bold')
-        ax.legend(fontsize=7, loc='upper right')
-        ax.grid(True, alpha=0.3)
+        # Configurar ejes y etiquetas
+        ax.set_xlabel('Estadística', fontsize=10, fontweight='bold')
+        ax.set_ylabel('Valor', fontsize=10, fontweight='bold')
+        ax.set_title(f'{var_display}\n(σ simulado = {std_sim:.1f})', 
+                    fontsize=11, fontweight='bold')
+        ax.set_xticks(x_pos)
+        ax.set_xticklabels(categorias, fontsize=9)
+        ax.legend(fontsize=8, loc='upper left', framealpha=0.9)
+        ax.grid(True, alpha=0.3, axis='y', linestyle='--')
         
-        # Añadir texto con estadísticas
-        textstr = f'n={num_simulaciones}\nRango: [{min_sim:.0f}, {max_sim:.0f}]'
-        ax.text(0.02, 0.98, textstr, transform=ax.transAxes, 
-               fontsize=8, verticalalignment='top',
-               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.3))
-    
-    # Ocultar el subplot extra (tenemos 5 variables en grid 2x3)
-    axes_flat[5].axis('off')
+        # Añadir rectángulo de fondo para resaltar comparación
+        ax.set_facecolor('#F9F9F9')
+        
+        # Añadir pequeño indicador de cantidad de simulaciones
+        ax.text(0.98, 0.02, f'n={num_simulaciones}', transform=ax.transAxes, 
+               fontsize=7, ha='right', va='bottom',
+               bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7, edgecolor='gray'))
     
     # Ajustar layout
-    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
+    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
     
     # Guardar si se especifica path
     if guardar_path:
@@ -462,10 +471,18 @@ def visualizar_scatter_montecarlo(zona, estadisticas, num_simulaciones=1000, mos
 
 def visualizar_datos_historicos_reales(zona, estadisticas, mostrar=True, guardar_path=None):
     """
-    Visualiza los datos históricos REALES (12 meses del CSV) sin simulaciones Monte Carlo.
+    Visualiza los datos históricos REALES (12 meses del CSV) con CURVA SUAVE.
     
-    Crea histogramas mostrando la distribución de los valores reales históricos
-    para cada variable de criminalidad en una zona específica.
+    Genera curvas de distribución mostrando:
+    - Curva continua suave (sin barras)
+    - Eje X: Valor del indicador
+    - Eje Y: Frecuencia estimada
+    - Área rellena azul bajo la curva
+    - Media histórica (línea roja vertical)
+    - Rango min-max (líneas naranja)
+    - Zona ±1σ (área verde sombreada)
+    
+    Estilo: Curva suave continua, fácil de interpretar visualmente.
     
     Parámetros
     ----------
@@ -481,16 +498,6 @@ def visualizar_datos_historicos_reales(zona, estadisticas, mostrar=True, guardar
     Retorna
     -------
     dict : Diccionario con 'figura' y 'datos_historicos'
-    
-    Ejemplo
-    -------
-    >>> from src.utils.historicos import GestorHistoricos
-    >>> gestor = GestorHistoricos()
-    >>> resultado = visualizar_datos_historicos_reales(
-    ...     zona='Norte',
-    ...     estadisticas=gestor.estadisticas['Norte'],
-    ...     guardar_path='output/norte_reales.png'
-    ... )
     """
     # Variables a graficar
     variables = ['Robos', 'Microtrafico', 'Vandalismo', 'Accidentes', 'Llamadas911']
@@ -500,26 +507,27 @@ def visualizar_datos_historicos_reales(zona, estadisticas, mostrar=True, guardar
         'Vandalismo': 'Vandalismo',
         'Accidentes': 'Accidentes de Tránsito',
         'Llamadas911': 'Llamadas de Emergencia'
-    }
+    }    # Crear figura horizontal (1 fila x 5 columnas) - MÁS CLARO
+    fig, axes = plt.subplots(1, 5, figsize=(22, 5))
+    fig.suptitle(f'Datos Historicos REALES - Zona {zona} (12 meses del CSV)\n' + 
+                 'Curvas muestran la distribucion de valores historicos', 
+                 fontsize=13, fontweight='bold', y=1.03)
     
-    # Crear figura con 5 subplots (2x3 grid)
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
-    fig.suptitle(f'Datos Históricos REALES - Zona {zona}\n(12 meses del CSV)', 
-                 fontsize=16, fontweight='bold')
-    
-    axes_flat = axes.flatten()
     datos_reales = {}
     
     for idx, var in enumerate(variables):
-        ax = axes_flat[idx]
+        ax = axes[idx]
         
         # Obtener datos históricos reales
         stats = estadisticas.get(var, {})
         valores_reales = stats.get('historico', [])
         
         if not valores_reales:
-            ax.text(0.5, 0.5, 'Sin datos históricos', ha='center', va='center')
-            ax.set_title(nombres_display[var])
+            ax.text(0.5, 0.5, f'Sin datos\nhistóricos', ha='center', va='center',
+                   fontsize=11, color='red')
+            ax.set_title(nombres_display[var], fontsize=11, fontweight='bold')
+            ax.set_xticks([])
+            ax.set_yticks([])
             continue
         
         datos_reales[var] = valores_reales
@@ -528,40 +536,68 @@ def visualizar_datos_historicos_reales(zona, estadisticas, mostrar=True, guardar
         media = stats.get('media', np.mean(valores_reales))
         std = stats.get('std', np.std(valores_reales))
         min_val = stats.get('min', min(valores_reales))
-        max_val = stats.get('max', max(valores_reales))
+        max_val = stats.get('max', max(valores_reales))        # ═══════════════════════════════════════════════════════════════════
+        # CURVA SUAVE DE DISTRIBUCIÓN (sin barras, solo línea continua)
+        # ═══════════════════════════════════════════════════════════════════
         
-        # HISTOGRAMA de datos reales
-        ax.hist(valores_reales, bins=min(len(valores_reales), 12), 
-                alpha=0.7, color='steelblue', edgecolor='black', linewidth=1.2,
-                label=f'Datos reales (n={len(valores_reales)})')
+        # Crear rango de valores para la curva suave
+        x_range = np.linspace(min_val - std * 0.8, max_val + std * 0.8, 300)
         
-        # Línea de media
-        ax.axvline(media, color='red', linestyle='--', linewidth=2, 
-                   label=f'Media: {media:.1f}')
+        # Calcular densidad de probabilidad normal
+        from scipy.stats import norm
+        densidad = norm.pdf(x_range, media, std)
         
-        # Líneas de desviación estándar
-        ax.axvline(media - std, color='orange', linestyle=':', linewidth=1.5, 
-                   label=f'±1σ: [{media-std:.1f}, {media+std:.1f}]')
-        ax.axvline(media + std, color='orange', linestyle=':', linewidth=1.5)
+        # Normalizar para que se vea como frecuencia (escalar por número de datos)
+        frecuencia = densidad * len(valores_reales) * std * 2.5
         
-        # Configurar
-        ax.set_xlabel('Valor', fontsize=10)
-        ax.set_ylabel('Frecuencia', fontsize=10)
-        ax.set_title(f'{nombres_display[var]}', fontsize=12, fontweight='bold')
-        ax.legend(fontsize=8, loc='best')
-        ax.grid(True, alpha=0.3, axis='y')
+        # ═══ GRÁFICA DE ÁREA COMPLETA (sin barras) ═══
+        # Área rellena (azul claro)
+        ax.fill_between(x_range, frecuencia, 
+                       alpha=0.5, color='#4A90E2', 
+                       label=f'Distribución (n={len(valores_reales)})',
+                       edgecolor='#2E5C8A', linewidth=2.5)
         
-        # Anotaciones con estadísticas
-        texto_stats = f'Min: {min_val:.0f}\nMax: {max_val:.0f}\nσ: {std:.1f}'
-        ax.text(0.02, 0.98, texto_stats, transform=ax.transAxes,
-                fontsize=9, verticalalignment='top',
-                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    
-    # Ocultar subplot extra
-    axes_flat[5].axis('off')
+        # Línea superior de la curva (azul oscuro grueso)
+        ax.plot(x_range, frecuencia, 
+               color='#1E3A5F', linewidth=3, zorder=5)
+        
+        # ═══ LÍNEAS DE REFERENCIA ═══
+        # Línea de MEDIA (roja gruesa)
+        ax.axvline(media, color='#E74C3C', linestyle='-', linewidth=3.5, 
+                  label=f'Media: {media:.1f}', zorder=10, alpha=0.9)
+        
+        # Líneas de MIN y MAX (naranja)
+        ax.axvline(min_val, color='#F39C12', linestyle='--', linewidth=2.5,
+                  label=f'Min: {min_val:.0f}', alpha=0.8, zorder=9)
+        ax.axvline(max_val, color='#F39C12', linestyle='--', linewidth=2.5,
+                  label=f'Max: {max_val:.0f}', alpha=0.8, zorder=9)
+        
+        # Área de ±1σ (zona verde claro sombreada)
+        ax.axvspan(media - std, media + std, alpha=0.18, color='#27AE60',
+                  label=f'±1σ', zorder=1)        # Configurar ejes y etiquetas
+        ax.set_xlabel('Valor del Indicador', fontsize=10, fontweight='bold')
+        ax.set_ylabel('Frecuencia Estimada', fontsize=10, fontweight='bold')
+        ax.set_title(f'{nombres_display[var]}\n(μ={media:.1f}, σ={std:.1f})', 
+                    fontsize=11, fontweight='bold')
+        ax.legend(fontsize=7.5, loc='upper right', framealpha=0.95)
+        ax.grid(True, alpha=0.3, axis='y', linestyle='--')
+        
+        # Fondo blanco limpio
+        ax.set_facecolor('#FFFFFF')
+        
+        # Ajustar límites para mejor visualización
+        ax.set_xlim(min_val - std * 0.8, max_val + std * 0.8)
+        ax.set_ylim(0, np.max(frecuencia) * 1.15)
+        
+        # Anotaciones con estadísticas (cuadro superior izquierdo)
+        texto_stats = f'n = {len(valores_reales)} meses\nRango: [{min_val:.0f}, {max_val:.0f}]'
+        ax.text(0.03, 0.97, texto_stats, transform=ax.transAxes,
+                fontsize=8, verticalalignment='top',
+                bbox=dict(boxstyle='round,pad=0.5', facecolor='white', alpha=0.9, 
+                         edgecolor='#34495E', linewidth=1.5))
     
     # Ajustar layout
-    plt.tight_layout(rect=[0, 0.03, 1, 0.96])
+    plt.tight_layout(rect=[0, 0.02, 1, 0.96])
     
     # Guardar
     if guardar_path:

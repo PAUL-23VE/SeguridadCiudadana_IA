@@ -5,7 +5,13 @@ Modulo para diagnostico de zonas usando logica difusa, algoritmo genetico,
 Apriori, PRISM, analisis de conectividad urbana y simulacion Monte Carlo.
 """
 import numpy as np
-from ..algoritmos.difuso import clasificar_difuso, describir_membresia, graficar_membresia, TIPO_MEMBRESIA
+from ..algoritmos.difuso import (
+    clasificar_difuso, 
+    describir_membresia, 
+    graficar_membresia, 
+    graficar_membresia_consecuente,
+    TIPO_MEMBRESIA
+)
 from ..algoritmos.genetico import optimizar_pesos
 from ..algoritmos.reglas import obtener_regla_explicativa
 from ..algoritmos.conectividad import analizar_conectividad_zona
@@ -147,16 +153,17 @@ def diagnosticar_zona(grid, fila, col, G=None, grid_shape=None, usar_historicos=
     
     metricas = {
         'densidad_calles':         np.random.uniform(0, 500),
-        'densidad_intersecciones': np.random.uniform(0, 300),
-    }
+        'densidad_intersecciones': np.random.uniform(0, 300),    }
     print(f'\n  PASO 1: DATOS DE ENTRADA')
     print(f'  {sep2}')
     for k, v in datos.items():
         tipo    = TIPO_MEMBRESIA.get(k, 'triangular')
         simbolo = '[TRI]' if tipo == 'triangular' else '[SIG]'
         print(f'     * {k:<28}: {v:>4}   {simbolo} {tipo}')
+    
     for k, v in metricas.items():
         print(f'     * {k:<28}: {v:.2f}')
+    
     print(f'\n  PASO 2: ALGORITMO GENETICO (optimizacion de pesos)')
     print(f'  {sep2}')
     print('     -> Generando poblacion inicial de 30 individuos...')
@@ -169,16 +176,46 @@ def diagnosticar_zona(grid, fila, col, G=None, grid_shape=None, usar_historicos=
     print(f'\n  PASO 3: LOGICA DIFUSA (clasificacion)')
     print(f'  {sep2}')
     print(describir_membresia())
-    print('     -> Evaluando grados de membresia Bajo / Medio / Alto...')
-    print('     -> Defuzzificacion por centroide (centros: 16.5 / 50 / 83.5)...')
-    nivel, score = clasificar_difuso(datos, metricas, pesos)
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # ORDEN CORRECTO: Seguir los 4 pasos de lógica difusa
+    # ═══════════════════════════════════════════════════════════════════════════
+    
+    # PASO 1: FUZZIFICACIÓN - Mostrar funciones de membresía de ANTECEDENTES
+    print('     -> PASO 1: Fuzzificación - Convirtiendo valores crisp a difusos...')
+    fig_antecedentes = None
+    try:
+        print('        Generando gráfica de ANTECEDENTES (funciones de entrada)...')
+        fig_antecedentes = graficar_membresia(datos_zona=datos, nombre_zona=nombre)
+        print('        ✅ Gráfica 1/2: ANTECEDENTES generada')
+    except Exception as e:
+        print(f'        ❌ (gráfica antecedentes no disponible: {e})')
+    
+    # PASO 2: INFERENCIA (implícito en clasificar_difuso)
+    print('     -> PASO 2: Inferencia - Aplicando reglas difusas...')
+    
+    # PASO 3: AGREGACIÓN + PASO 4: DEFUZZIFICACIÓN
+    print('     -> PASO 3: Agregación - Combinando resultados de reglas...')
+    print('     -> PASO 4: Defuzzificación - Calculando centroide...')
+    
+    nivel, score = clasificar_difuso(
+        datos, 
+        metricas, 
+        pesos,
+        mostrar_defuzzificacion=True,  # Genera gráfica del CONSECUENTE
+        nombre_zona=nombre
+    )
+    
+    print(f'        ✅ Gráfica 2/2: CONSECUENTE generada (defuzzificación)')
     print(f'     OK Score de riesgo : {score:.2f}/100')
     print(f'     OK Clasificacion   : {nivel}')
-    fig_membresia = None
-    try:
-        fig_membresia = graficar_membresia(datos_zona=datos, nombre_zona=nombre)
-    except Exception as e:
-        print(f'     (grafica no disponible: {e})')
+    print()
+    print(f'     💡 ORDEN DE GRÁFICAS GENERADAS:')
+    print(f'        1️⃣  ANTECEDENTES (Fuzzificación - Paso 1)')
+    print(f'        2️⃣  CONSECUENTE (Defuzzificación - Pasos 3 y 4)')
+    
+    fig_membresia = fig_antecedentes  # Mantener compatibilidad
+    print('     ✅ Gráfica de CONSECUENTE generada (Paso 4: Defuzzificación)')
     factores = sorted(datos, key=datos.get, reverse=True)[:2]
     print(f'\n  PASO 4: ANALISIS DE FACTORES')
     print(f'  {sep2}')
