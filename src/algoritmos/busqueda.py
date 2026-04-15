@@ -1,13 +1,13 @@
 """
-Algoritmos de búsqueda en grafos: BFS, DFS, A*
+Algoritmos de busqueda en grafos: BFS, DFS, A*
 
 Estos algoritmos exploran el grafo del mapa urbano OSM para encontrar
-caminos entre dos puntos. Son útiles para análisis de rutas y conectividad.
+caminos entre dos puntos. Son utiles para analisis de rutas y conectividad.
 
 Algoritmos implementados:
-- BFS (Breadth-First Search): Búsqueda en anchura, encuentra el camino más corto en número de nodos
-- DFS (Depth-First Search): Búsqueda en profundidad, explora exhaustivamente
-- A* (A-Star): Búsqueda informada con heurística de Haversine, encuentra el camino óptimo en distancia
+- BFS: Busqueda en anchura, camino mas corto en numero de nodos
+- DFS: Busqueda en profundidad, explora exhaustivamente
+- A*:  Busqueda informada con heuristica Haversine, camino optimo en km
 """
 import networkx as nx
 import heapq
@@ -16,217 +16,118 @@ from collections import deque
 
 
 def calcular_distancia_haversine(lat1, lon1, lat2, lon2):
-    """
-    Calcula la distancia real en metros entre dos puntos GPS usando la fórmula de Haversine.
-    
-    Parámetros
-    ----------
-    lat1, lon1 : float
-        Latitud y longitud del punto 1 (en grados)
-    lat2, lon2 : float
-        Latitud y longitud del punto 2 (en grados)
-    
-    Retorna
-    -------
-    float : distancia en metros
-    """
-    R = 6371000  # Radio de la Tierra en metros
-    
-    # Convertir grados a radianes
+    """Distancia en metros entre dos puntos GPS (formula de Haversine)."""
+    R = 6371000
     phi1 = math.radians(lat1)
     phi2 = math.radians(lat2)
     dphi = math.radians(lat2 - lat1)
     dlambda = math.radians(lon2 - lon1)
-    
-    # Fórmula de Haversine
-    a = math.sin(dphi/2)**2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    distancia = R * c
-    
-    return distancia
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    return R * c
+
+
+def heuristica_haversine(G, nodo1, nodo2):
+    """Distancia geodesica en km entre dos nodos del grafo (heuristica admisible para A*)."""
+    lat1 = G.nodes[nodo1]["y"]
+    lon1 = G.nodes[nodo1]["x"]
+    lat2 = G.nodes[nodo2]["y"]
+    lon2 = G.nodes[nodo2]["x"]
+    return calcular_distancia_haversine(lat1, lon1, lat2, lon2) / 1000
 
 
 def bfs(G, origen, destino, mostrar_mensajes=False):
-    """
-    Breadth-First Search (Búsqueda en Anchura)
-    
-    Explora el grafo nivel por nivel hasta encontrar el destino.
-    Garantiza encontrar el camino más corto en número de nodos.
-    
-    Parámetros
-    ----------
-    G : networkx.Graph
-        Grafo del mapa urbano
-    origen : nodo
-        Nodo de inicio
-    destino : nodo
-        Nodo objetivo
-    mostrar_mensajes : bool
-        Si True, imprime información del proceso en consola
-    
-    Retorna
-    -------
-    list : lista de nodos que forman el camino, o [] si no existe
-    """
+    """Breadth-First Search: camino mas corto en numero de nodos."""
     if mostrar_mensajes:
-        print("\n  [BFS] Iniciando búsqueda en anchura...")
-    
+        print("\n  [BFS] Iniciando busqueda en anchura...")
     visitados = set()
     cola = deque([[origen]])
     nodos_explorados = 0
-    
     while cola:
         camino = cola.popleft()
         nodo = camino[-1]
         nodos_explorados += 1
-        
         if nodo == destino:
             if mostrar_mensajes:
                 print(f"  [BFS] Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
             return camino
-            
         if nodo not in visitados:
             visitados.add(nodo)
             for vecino in G.neighbors(nodo):
                 nuevo_camino = list(camino)
                 nuevo_camino.append(vecino)
                 cola.append(nuevo_camino)
-    
     if mostrar_mensajes:
         print(f"  [BFS] No existe camino (explorados: {nodos_explorados})")
     return []
 
 
 def dfs(G, origen, destino, mostrar_mensajes=False):
-    """
-    Depth-First Search (Búsqueda en Profundidad)
-    
-    Explora el grafo en profundidad hasta encontrar el destino.
-    No garantiza el camino más corto, pero explora exhaustivamente.
-    
-    Parámetros
-    ----------
-    G : networkx.Graph
-        Grafo del mapa urbano
-    origen : nodo
-        Nodo de inicio
-    destino : nodo
-        Nodo objetivo
-    mostrar_mensajes : bool
-        Si True, imprime información del proceso en consola
-    
-    Retorna
-    -------
-    list : lista de nodos que forman el camino, o [] si no existe
-    """
+    """Depth-First Search: explora exhaustivamente en profundidad."""
     if mostrar_mensajes:
-        print("\n  [DFS] Iniciando búsqueda en profundidad...")
-    
+        print("\n  [DFS] Iniciando busqueda en profundidad...")
     visitados = set()
     pila = [[origen]]
     nodos_explorados = 0
-    
     while pila:
         camino = pila.pop()
         nodo = camino[-1]
         nodos_explorados += 1
-        
         if nodo == destino:
             if mostrar_mensajes:
                 print(f"  [DFS] Camino encontrado! ({len(camino)} nodos, explorados: {nodos_explorados})")
             return camino
-            
         if nodo not in visitados:
             visitados.add(nodo)
             for vecino in G.neighbors(nodo):
                 nuevo_camino = list(camino)
                 nuevo_camino.append(vecino)
                 pila.append(nuevo_camino)
-    
     if mostrar_mensajes:
         print(f"  [DFS] No existe camino (explorados: {nodos_explorados})")
     return []
 
 
-def heuristica_haversine(G, nodo1, nodo2):
-    """
-    Heurística de distancia real entre dos nodos (en km).
-    
-    Usa la fórmula de Haversine para calcular la distancia geodésica
-    entre dos nodos del grafo. Esta es la heurística admisible para A*.
-    
-    Parámetros
-    ----------
-    G : networkx.Graph
-        Grafo con nodos que tienen atributos 'x' (longitud) e 'y' (latitud)
-    nodo1, nodo2 : nodo
-        Nodos del grafo
-    
-    Retorna
-    -------
-    float : distancia en kilómetros
-    """
-    lat1 = G.nodes[nodo1]['y']
-    lon1 = G.nodes[nodo1]['x']
-    lat2 = G.nodes[nodo2]['y']
-    lon2 = G.nodes[nodo2]['x']
-    return calcular_distancia_haversine(lat1, lon1, lat2, lon2) / 1000  # Convertir a km
-
-
 def a_estrella(G, origen, destino, mostrar_mensajes=False):
     """
-    A* (A-Estrella) - Búsqueda Informada con Heurística de Haversine
-    
-    Usa la distancia geográfica real como heurística para encontrar
-    el camino más corto en distancia (no en número de nodos).
-    
-    Parámetros
-    ----------
-    G : networkx.Graph
-        Grafo del mapa urbano (debe tener atributos 'x' e 'y' en los nodos)
-    origen : nodo
-        Nodo de inicio
-    destino : nodo
-        Nodo objetivo
-    mostrar_mensajes : bool
-        Si True, imprime información del proceso en consola
-      Retorna
-    -------
-    list : lista de nodos que forman el camino óptimo, o [] si no existe
+    A* con f(n) = g(n) + h(n).
+
+    g(n): km reales acumulados desde origen hasta n
+    h(n): km estimados por Haversine desde n hasta destino
     """
     if mostrar_mensajes:
-        print("\n  [A*] Iniciando búsqueda informada con heurística Haversine...")
-    
+        print("\n  [A*] Iniciando busqueda informada con heuristica Haversine...")
     frontera = [(0, [origen])]
     visitados = set()
     nodos_explorados = 0
-    
     while frontera:
         costo, camino = heapq.heappop(frontera)
         nodo = camino[-1]
         nodos_explorados += 1
-        
         if nodo == destino:
             distancia_total = sum(
-                heuristica_haversine(G, camino[i], camino[i+1]) 
-                for i in range(len(camino)-1)
+                heuristica_haversine(G, camino[i], camino[i + 1])
+                for i in range(len(camino) - 1)
             )
             if mostrar_mensajes:
-                print(f"  [A*] ✅ Camino óptimo encontrado! ({len(camino)} nodos, {distancia_total:.2f} km, explorados: {nodos_explorados})")
+                print(
+                    f"  [A*] Camino optimo encontrado!"
+                    f" ({len(camino)} nodos, {distancia_total:.2f} km,"
+                    f" explorados: {nodos_explorados})"
+                )
             return camino
-            
         if nodo not in visitados:
             visitados.add(nodo)
             for vecino in G.neighbors(nodo):
                 nuevo_camino = list(camino)
                 nuevo_camino.append(vecino)
-                heur = heuristica_haversine(G, vecino, destino)
-                heapq.heappush(frontera, (costo + 1 + heur, nuevo_camino))
-    
+                g = costo + heuristica_haversine(G, nodo, vecino)
+                h = heuristica_haversine(G, vecino, destino)
+                heapq.heappush(frontera, (g + h, nuevo_camino))
     if mostrar_mensajes:
-        print(f"  [A*] ❌ No existe camino (explorados: {nodos_explorados})")
+        print(f"  [A*] No existe camino (explorados: {nodos_explorados})")
     return []
 
 
-# Alias para compatibilidad con código existente
+# Alias para compatibilidad con codigo existente
 astar = a_estrella
