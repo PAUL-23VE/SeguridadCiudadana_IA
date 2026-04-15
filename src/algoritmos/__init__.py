@@ -41,7 +41,6 @@ from .montecarlo import (
     generar_datos_con_restricciones,
     generar_escenario_unico,
     visualizar_simulaciones_montecarlo,
-    visualizar_scatter_montecarlo,
     visualizar_datos_historicos_reales
 )
 
@@ -54,8 +53,6 @@ __all__ = [
     # Reglas
     'reglas_apriori', 'reglas_prism', 'obtener_regla_explicativa', 'discretizar_valor', 'apriori',
     # Difuso
-    'clasificar_difuso', 'mantener_graficas_abiertas', 'graficar_membresia', 'describir_membresia',    # Monte Carlo
-    'generar_datos_zona', 'generar_datos_con_restricciones', 'generar_escenario_unico',
-    'visualizar_simulaciones_montecarlo', 'visualizar_scatter_montecarlo', 
-    'visualizar_datos_historicos_reales'
+    'clasificar_difuso', 'mantener_graficas_abiertas', 'graficar_membresia', 'describir_membresia',    # Monte Carlo    'generar_datos_zona', 'generar_datos_con_restricciones', 'generar_escenario_unico',
+    'visualizar_simulaciones_montecarlo', 'visualizar_datos_historicos_reales'
 ]

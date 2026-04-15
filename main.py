@@ -805,16 +805,17 @@ def _esperar_cierre_graficas():
             enter_presionado.set()
 
         hilo = threading.Thread(target=esperar_enter, daemon=True)
-        hilo.start()
-
-        # plt.show(block=True) procesa eventos de ventana hasta que se cierren TODAS las figuras
+        hilo.start()        # plt.show(block=True) procesa eventos de ventana hasta que se cierren TODAS las figuras
         # o hasta que el hilo de ENTER lo interrumpa periódicamente
         while _modulo_difuso._figuras_abiertas and not enter_presionado.is_set():
-            # Filtramos figuras que el usuario ya cerró manualmente
-            _modulo_difuso._figuras_abiertas = [
+            # Filtramos figuras que el usuario ya cerró manualmente.
+            # Usamos slice assignment para modificar la lista in-place y mantener
+            # la referencia compartida con src.Fuzzy.sistema_difuso._figuras_abiertas
+            abiertas = [
                 f for f in _modulo_difuso._figuras_abiertas
                 if plt.fignum_exists(f.number)
             ]
+            _modulo_difuso._figuras_abiertas[:] = abiertas
             if not _modulo_difuso._figuras_abiertas:
                 break
             plt.pause(0.3)   # procesa eventos de UI sin bloquear indefinidamente

@@ -93,8 +93,7 @@ def graficar_fuzzificacion(datos_zona=None, nombre_zona=""):
         datos_zona = {}
     variables = list(TIPO_MEMBRESIA.keys())
     n = len(variables)
-    fig = plt.figure(num=1, figsize=(4 * n, 4))
-    axes = fig.subplots(1, n)
+    fig, axes = plt.subplots(1, n, figsize=(4 * n, 4))
     fig.suptitle(
         f"ANTECEDENTES: Funciones de Membresia - Logica Difusa\n{nombre_zona}",
         fontsize=13, fontweight='bold', y=1.01

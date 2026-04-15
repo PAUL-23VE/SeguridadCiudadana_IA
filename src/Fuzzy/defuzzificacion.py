@@ -79,24 +79,11 @@ def graficar_defuzzificacion(resultado_agregacion, score_final=None, nombre_zona
     if score_final is None:
         score_final = defuzzificar(resultado_agregacion)
 
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 9))
+    fig, ax2 = plt.subplots(1, 1, figsize=(11, 5))
     fig.suptitle(f"Defuzzificacion por Centroide - Logica Difusa\n{nombre_zona}",
                  fontsize=13, fontweight='bold')
 
-    # Subplot 1: consecuentes truncados
-    ax1.set_title("Paso 3: Agregacion - Consecuentes Truncados", fontweight='bold')
-    for nivel in ('bajo', 'medio', 'alto'):
-        original = resultado_agregacion[f'cons_{nivel}']
-        mu       = resultado_agregacion[f'mu_{nivel}']
-        truncado = np.minimum(mu, original)
-        ax1.plot(universo, original, '--', color=colores[nivel], alpha=0.4, lw=1)
-        ax1.fill_between(universo, truncado, alpha=0.55, color=colores[nivel],
-                         label=f'{nivel.capitalize()} (mu={mu:.2f})')
-    ax1.set_xlim(0, 100); ax1.set_ylim(0, 1.1)
-    ax1.set_ylabel("Grado de Membresia")
-    ax1.legend(fontsize=9, loc='upper right'); ax1.grid(True, alpha=0.3)
-
-    # Subplot 2: area agregada + centroide
+    # Subplot único: area agregada + centroide
     ax2.set_title("Paso 4: Defuzzificacion - Centroide", fontweight='bold')
     ax2.fill_between(universo, agregado, alpha=0.65, color='#2196F3', label='Area Agregada (MAX)')
     ax2.plot(universo, agregado, color='#1565C0', lw=2)

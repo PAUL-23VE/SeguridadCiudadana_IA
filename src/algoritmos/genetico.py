@@ -141,7 +141,6 @@ def crear_poblacion_inicial(n):
     """
     return [crear_individuo() for _ in range(n)]
 
-
 def seleccion_padres(poblacion, fitness_scores, n_padres):
     """
     PASO 2: Selección de padres por torneo.
@@ -260,12 +259,16 @@ def optimizar_pesos(dataset=None, generaciones=50, tam_poblacion=30, silencioso=
     Retorna
     -------
     dict : Mejor conjunto de pesos encontrado
-    """
+    """    # Leer configuración del AG desde config.py
+    from config import GENETICO_CONFIG
+    n_elite = GENETICO_CONFIG.get('elitismo', 2)
+
     # Generar dataset de prueba
     dataset_prueba = generar_dataset_prueba(100)
     
     if not silencioso:
         print(f"     → Población inicial: {tam_poblacion} individuos")
+        print(f"     → Elitismo: {n_elite} individuos preservados por generación")
     
     # PASO 1: Crear población inicial
     poblacion = crear_poblacion_inicial(tam_poblacion)
@@ -298,8 +301,14 @@ def optimizar_pesos(dataset=None, generaciones=50, tam_poblacion=30, silencioso=
         # PASO 3 y 4: Crossover y Mutación para crear nueva generación
         nueva_poblacion = []
         
-        # Elitismo: mantener el mejor individuo
-        nueva_poblacion.append(mejor_individuo_gen)
+        # Elitismo: preservar los n_elite mejores individuos sin modificación
+        individuos_ordenados = sorted(
+            zip(poblacion, fitness_scores),
+            key=lambda x: x[1],
+            reverse=True
+        )
+        for ind, _ in individuos_ordenados[:n_elite]:
+            nueva_poblacion.append(ind)
         
         while len(nueva_poblacion) < tam_poblacion:
             # Seleccionar dos padres aleatorios

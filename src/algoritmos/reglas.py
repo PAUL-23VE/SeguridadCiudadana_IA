@@ -445,7 +445,6 @@ def reglas_prism(dataset=None, min_confianza=0.5, silencioso=True):
     
     return reglas_str if reglas_str else ["No se encontraron reglas PRISM"]
 
-
 def obtener_regla_explicativa(datos, nivel):
     """
     Retorna una regla explicativa según el nivel de riesgo calculado.

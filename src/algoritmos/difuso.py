@@ -39,7 +39,14 @@ from src.Fuzzy.defuzzificacion import (
     graficar_defuzzificacion,
 )
 
+# Referencia a la lista de figuras abiertas que vive en sistema_difuso.
+# main.py accede a _modulo_difuso._figuras_abiertas y la modifica directamente,
+# por eso apuntamos al mismo objeto lista del modulo fuente.
+import src.Fuzzy.sistema_difuso as _sd
+_figuras_abiertas = _sd._figuras_abiertas   # misma lista, no una copia
+
 __all__ = [
+    '_figuras_abiertas',
     'TIPO_MEMBRESIA',
     '_MAXIMOS',
     '_triangular',
