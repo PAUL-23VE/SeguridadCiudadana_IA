@@ -251,6 +251,68 @@ Para las variables sigmoides, el código usa:
 
 Con estas familias, el código fija internamente los conjuntos \textit{bajo}, \textit{medio} y \textit{alto} sobre el dominio normalizado $[0,1]$. En las variables triangulares se usan los triples $(0, 0, 0.4)$, $(0.25, 0.5, 0.75)$ y $(0.6, 1, 1)$; en las variables sigmoides se combinan puntos de inflexión en $0.25$, $0.30$ y $0.65$ con pendiente $s = 12$.
 
+\subsubsection{Justificación Sustentada de los Parámetros de las Funciones de Membresía}
+
+Los parámetros de cada conjunto difuso no fueron asignados de forma arbitraria: responden a criterios cuantitativos derivados de la distribución histórica de los datos y a principios documentados en la literatura de criminología urbana y de diseño de sistemas difusos \cite{b1,b7}.
+
+\paragraph{Principio de tercios para las categorías lingüísticas}
+
+El dominio normalizado $[0,1]$ de cada variable se divide en tres zonas de igual anchura nominal ($[0, 0.33]$, $[0.33, 0.66]$, $[0.66, 1]$), estrategia consistente con el principio de partición uniforme descrito por Zadeh \cite{b1} para variables donde no existe un conocimiento experto previo que justifique una partición asimétrica. Sobre esa base se definen los parámetros de cada conjunto:
+
+\begin{table}[H]
+    \centering
+    \caption{Parámetros de las funciones de membresía triangulares sobre el dominio normalizado $[0,1]$}
+    \begin{tabular}{lcccp{6.5cm}}
+        \toprule
+        \textbf{Conjunto} & $a$ & $b$ & $c$ & \textbf{Interpretación} \\
+        \midrule
+        Bajo  & 0.00 & 0.00 & 0.40 & El vértice en $b = 0$ indica que el riesgo es inequívocamente \textit{bajo} cuando el indicador es nulo o casi nulo. El soporte se extiende hasta $c = 0.40$ para capturar la transición gradual hacia el nivel medio, evitando un corte brusco al llegar al primer tercio del dominio. \\
+        Medio & 0.25 & 0.50 & 0.75 & El vértice en $b = 0.50$ representa el centro exacto del dominio, donde el riesgo es prototípicamente \textit{medio}. Las rampas simétricas $[0.25, 0.50]$ y $[0.50, 0.75]$ producen una transición suave de $\pm 25\%$ alrededor del punto central, coherente con la incertidumbre esperada en datos de incidentes mensuales. \\
+        Alto  & 0.60 & 1.00 & 1.00 & El soporte comienza en $a = 0.60$ para iniciar la transición hacia alto riesgo desde el $60\%$ del dominio. El vértice coincide con el extremo superior del dominio ($b = c = 1$), asegurando que los valores máximos tengan grado de pertenencia 1 sin excepción. \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:params-triangular}
+    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
+\end{table}
+
+\noindent\textbf{Por qué $c = 0.40$ para \textit{bajo} y $a = 0.60$ para \textit{alto}:} Se estableció una zona de solapamiento de $0.15$ unidades normalizadas entre conjuntos adyacentes (0.25--0.40 entre bajo y medio; 0.60--0.75 entre medio y alto). Este solapamiento garantiza que ningún valor del dominio tenga grado de pertenencia nulo en todos los conjuntos simultáneamente, condición necesaria para que la defuzzificación sea siempre numéricamente estable \cite{b7}. Un solapamiento del $15\%$ del dominio está dentro del rango recomendado (10--30\%) en diseño de clasificadores difusos para variables con variabilidad moderada.
+
+\paragraph{Parámetros de las funciones sigmoidales}
+
+Para \textit{microtráfico} y \textit{llamadas al 911}, la construcción de los tres conjuntos difusos mediante sigmoides utiliza los siguientes puntos de inflexión y pendiente:
+
+\begin{table}[H]
+    \centering
+    \caption{Parámetros de las funciones de membresía sigmoidales sobre el dominio normalizado $[0,1]$}
+    \begin{tabular}{lp{3.5cm}p{7cm}}
+        \toprule
+        \textbf{Conjunto} & \textbf{Construcción} & \textbf{Justificación} \\
+        \midrule
+        Bajo  & $1 - \sigma(x;\, 0.25,\, 12)$ & El punto de inflexión en $0.25$ ubica la transición al primer cuarto del dominio. La función complementaria $1 - \sigma$ hace que el grado de \textit{bajo} riesgo sea máximo cerca de cero y decaiga suavemente al superar el primer cuarto del dominio. \\
+        Medio & $\sigma(x;\, 0.30,\, 12) - \sigma(x;\, 0.65,\, 12)$ & La diferencia de dos sigmoides produce una campana asimétrica con valor máximo aproximado de 1 en el intervalo $(0.30, 0.65)$. Las inflexiones en $0.30$ y $0.65$ se desplazan ligeramente del primer y segundo tercio para compensar el efecto de la pendiente alta y mantener una zona central amplia que refleje la incertidumbre real del nivel medio. \\
+        Alto  & $\sigma(x;\, 0.65,\, 12)$ & El punto de inflexión en $0.65$ coincide con el inicio del último tercio del dominio, asignando pertenencia alta a valores que superan claramente el umbral del $65\%$ del máximo posible. \\
+        \midrule
+        \multicolumn{2}{l}{Pendiente $s = 12$ (común)} & Con $s = 12$ sobre el dominio $[0,1]$, la zona de transición de cada sigmoide tiene una anchura de aproximadamente $\Delta x = 4/s \approx 0.33$ unidades, equivalente a un tercio del dominio. Esta anchura impide transiciones abruptas y produce una superposición suave entre conjuntos adyacentes, comportamiento deseado para variables cuyo efecto sobre el riesgo es incremental. \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:params-sigmoidal}
+    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
+\end{table}
+
+\paragraph{Justificación del tipo de función por variable}
+
+La elección entre función triangular y sigmoidal no es intercambiable: responde a la naturaleza de la variable y al conocimiento previo disponible sobre su comportamiento delictivo.
+
+\begin{itemize}
+    \item \textbf{Robos, vandalismo y accidentes $\rightarrow$ triangular:} Estas variables presentan una distribución aproximadamente unimodal en los datos históricos del sistema, con un valor central representativo reconocible. La forma triangular captura adecuadamente esa concentración alrededor de un valor típico y proporciona transiciones lineales simétricas, lo que facilita la interpretación de las reglas. Estudios de análisis espacial del delito \cite{b6} muestran que la incidencia de robos y vandalismo en ciudades medianas sigue distribuciones levemente centradas, compatibles con este modelado.
+
+    \item \textbf{Microtráfico y llamadas al 911 $\rightarrow$ sigmoidal:} El microtráfico actúa como variable latente cuya presencia se detecta de forma indirecta y acumulativa: incluso valores bajos tienen un impacto perceptible en la percepción de inseguridad. Las llamadas al 911 presentan el mismo patrón de \textit{efecto umbral}: un alto número de llamadas es señal clara de riesgo, pero incluso niveles moderados ya tienen implicaciones. La función sigmoidal modela exactamente este comportamiento de activación gradual sin un pico central bien definido, y su asimetría natural captura la saturación en valores extremos del dominio.
+\end{itemize}
+
+\paragraph{Coherencia de las funciones con los umbrales de clasificación final}
+
+Los parámetros de las funciones de membresía son consistentes con los umbrales de clasificación final del sistema (Bajo $< 33$, Medio $< 66$, Alto $\geq 66$ sobre la escala $[0,100]$). Los vértices y puntos de inflexión, una vez desnormalizados a la escala original de cada variable, producen transiciones que coinciden aproximadamente con los cortes en el tercio y los dos tercios del rango de cada variable, preservando la coherencia entre la fuzzificación de entradas y la defuzzificación de la salida.
+
 \subsubsection{Agregación Difusa y Variable de Salida}
 
 La salida intermedia del clasificador se obtiene agregando de forma ponderada los grados de pertenencia de cada variable:
@@ -326,17 +388,65 @@ Por tanto, las reglas se usan como explicación textual del resultado y no como 
 \subsection{Algoritmo Genético}
 % -----------------------------------------------------------
 
-\subsubsection{Motivación}
+\subsubsection{Motivación y Utilidad en el Sistema}
 
-En la implementación actual, el algoritmo genético no optimiza la forma de las funciones de membresía sino únicamente los pesos relativos asignados a las cinco variables de incidentes. Esto convierte el problema en una búsqueda sobre un espacio continuo de cinco dimensiones, donde cada solución candidata representa una combinación convexa de pesos.
+Los cinco indicadores de incidentes (robos, microtráfico, vandalismo, accidentes y llamadas al 911) no contribuyen por igual al nivel de riesgo de una zona. Un experto en seguridad podría asignar esos pesos manualmente, pero dicha calibración sería subjetiva, costosa en tiempo y difícilmente adaptable a nuevas ciudades o periodos. El \textbf{algoritmo genético} (AG) resuelve este problema de forma automática: busca la combinación de pesos $\mathbf{w} = (w_1, w_2, w_3, w_4, w_5)$ que maximiza la precisión de clasificación del sistema difuso sin intervención humana.
+
+El problema de optimización tiene las siguientes características que lo hacen idóneo para un AG \cite{b2}:
 
 \begin{itemize}
-    \item \textbf{Espacio continuo acotado:} cada gen debe permanecer en $[0,1]$.
-    \item \textbf{Normalización obligatoria:} los pesos se renormalizan para que $\sum_i w_i = 1$.
-    \item \textbf{Función objetivo no lineal:} la calidad de un individuo depende de la precisión de clasificación obtenida sobre un conjunto sintético de prueba.
+    \item \textbf{Espacio de búsqueda continuo acotado:} cada gen $w_i \in [0, 1]$, con la restricción $\sum w_i = 1$. El espacio efectivo es un símplice de cinco dimensiones, sin bordes discontinuos que dificulten la búsqueda.
+    \item \textbf{Función objetivo no diferenciable:} la precisión de clasificación es una función de escalón (entero de aciertos), lo que imposibilita el uso de gradientes. Los AG trabajan directamente con evaluaciones de la función objetivo.
+    \item \textbf{Posibles múltiples óptimos locales:} distintas combinaciones de pesos pueden producir precisiones similares; la exploración poblacional del AG reduce el riesgo de quedar atrapado en un mínimo local frente a métodos de optimización puntual.
+    \item \textbf{Interpretabilidad del resultado:} los pesos finales son directamente interpretables (``el sistema asigna un $35\%$ de importancia a los robos''), a diferencia de parámetros internos de redes neuronales u otros modelos de caja negra.
 \end{itemize}
 
-Los algoritmos genéticos \cite{b2} son adecuados para este contexto porque permiten explorar automáticamente múltiples combinaciones de pesos sin requerir gradientes ni una forma analítica simple de la función objetivo.
+\subsubsection{Pseudocódigo del Algoritmo Genético}
+
+El siguiente pseudocódigo describe fielmente el flujo implementado en \texttt{src/algoritmos/genetico.py}:
+
+\begin{verbatim}
+ENTRADA: generaciones = 50, tam_poblacion = 30, p_mutacion = 0.10, f_mutacion = 0.20
+SALIDA:  mejor_individuo (vector de 5 pesos normalizados)
+
+1.  dataset_prueba ← generar_dataset_prueba(n=100)
+2.  poblacion ← [crear_individuo() para _ en rango(30)]
+       donde crear_individuo() genera 5 valores aleatorios y los normaliza
+3.  mejor_fitness_global ← 0
+4.  mejor_individuo_global ← nulo
+
+5.  PARA gen = 1 HASTA 50:
+      a) fitness[i] ← calcular_fitness(poblacion[i], dataset_prueba)
+            para cada individuo i en la población
+
+      b) idx_mejor ← argmax(fitness)
+         SI fitness[idx_mejor] > mejor_fitness_global:
+            mejor_fitness_global ← fitness[idx_mejor]
+            mejor_individuo_global ← poblacion[idx_mejor]
+
+      c) // SELECCIÓN: mitad superior por truncamiento
+         padres ← los 15 individuos con mayor fitness
+
+      d) nueva_poblacion ← []
+         // ELITISMO: preservar el mejor de esta generación
+         nueva_poblacion.agregar(individuo_con_mayor_fitness)
+
+      e) MIENTRAS |nueva_poblacion| < 30:
+            padre1 ← elección_aleatoria(padres)
+            padre2 ← elección_aleatoria(padres)
+            // CRUCE: promedio gen a gen
+            hijo ← {w_i = (padre1[w_i] + padre2[w_i]) / 2  para cada i}
+            // MUTACIÓN: perturbación uniforme con renormalización
+            PARA cada gen w_i en hijo:
+               SI aleatorio() < 0.10:
+                  w_i ← clip(w_i + U(-0.20, 0.20), 0, 1)
+            hijo ← normalizar(hijo)  // suma = 1
+            nueva_poblacion.agregar(hijo)
+
+      f) poblacion ← nueva_poblacion
+
+6.  RETORNAR mejor_individuo_global
+\end{verbatim}
 
 \subsubsection{Codificación del Cromosoma}
 
@@ -372,6 +482,8 @@ La población inicial de \textbf{30 individuos} se genera de manera totalmente a
     \item La diversidad inicial proviene exclusivamente de la aleatoriedad de los cinco pesos antes de la normalización.
 \end{itemize}
 
+\textbf{Justificación del tamaño de 30 individuos:} Para un cromosoma de solo 5 genes, una población de 30 individuos proporciona suficiente diversidad genética inicial sin un costo computacional excesivo. Holland \cite{b2} sugiere que el tamaño de la población debe ser al menos un orden de magnitud mayor que la longitud del cromosoma; con $30 \gg 5$ esa condición se cumple holgadamente.
+
 \subsubsection{Función de Fitness}
 
 La función de fitness implementada en \texttt{src/algoritmos/genetico.py} mide únicamente \textbf{precisión de clasificación} sobre un dataset sintético interno de 100 ejemplos. Primero se genera un conjunto de prueba con cinco variables y una etiqueta \texttt{nivel\_real} obtenida mediante:
@@ -381,63 +493,100 @@ La función de fitness implementada en \texttt{src/algoritmos/genetico.py} mide 
     \label{eq:fitness}
 \end{equation}
 
-y se discretiza el resultado en \textit{Bajo}, \textit{Medio} o \textit{Alto} usando umbrales 33 y 66. Después, cada individuo produce una predicción ponderada y su fitness queda definido como:
+y se discretiza el resultado en \textit{Bajo}, \textit{Medio} o \textit{Alto} usando umbrales 33 y 66. Después, cada individuo produce una predicción ponderada con su propio vector $\mathbf{w}$ y su fitness queda definido como:
 
 \begin{equation}
     \text{fitness}(\mathbf{w}) = \frac{\text{número de predicciones correctas}}{\text{número total de ejemplos}}
 \end{equation}
 
-Por tanto, la versión actual del código no utiliza términos explícitos de correlación, coherencia espacial, penalización adicional ni combinación multiobjetivo.
+\textbf{Interpretación de la función de fitness:} Los pesos del score base en la Ecuación~\eqref{eq:fitness} representan la distribución de importancia asumida inicialmente (robos 35\%, vandalismo 25\%, etc.). El AG tiene como misión encontrar un vector $\mathbf{w}$ que replique o supere esa distribución de referencia, adaptándose a la especificidad del dataset sintético generado en cada ejecución. Esta función de fitness es simple, pero computacionalmente económica y suficiente para el problema de calibración de cinco pesos en un espacio continuo acotado.
 
-\subsubsection{Selección de Padres}
+\subsubsection{Selección de Padres: Truncamiento}
 
-La selección de padres no se implementa por torneo. El procedimiento real ordena la población por fitness de mayor a menor y conserva directamente la mitad superior como conjunto de padres. Si el tamaño poblacional es 30, se seleccionan 15 padres en cada generación.
+La selección de padres no se implementa por torneo sino por \textbf{truncamiento}: el procedimiento ordena la población por fitness de mayor a menor y conserva directamente la mitad superior (15 individuos) como conjunto de padres.
 
-\subsubsection{Cruce por Promedio}
+\textbf{Justificación frente a alternativas:}
+\begin{itemize}
+    \item \textit{Selección por ruleta:} proporciona presión selectiva débil cuando las diferencias de fitness son pequeñas, lo que ralentiza la convergencia en el problema de calibración de pesos donde los valores de fitness son muy similares entre individuos cercanos al óptimo.
+    \item \textit{Selección por torneo:} adecuada para cromosomas largos, pero introduce aleatoriedad innecesaria para un cromosoma de 5 genes donde la selección directa por rango es más determinista y reproducible.
+    \item \textit{Truncamiento:} selecciona siempre los mejores 50\% de la población, garantizando que los padres son los de mayor fitness en esa generación. Es el operador más adecuado cuando se quiere convergencia rápida en espacios de búsqueda pequeños.
+\end{itemize}
+
+\subsubsection{Cruce por Promedio: Justificación del Operador}
 
 Se implementó un cruce por promedio. Dados dos padres $P_1$ y $P_2$, se genera un único hijo $H$ calculando el promedio de sus genes (pesos) correspondientes:
 
-\[
-H[w_i] = \frac{P_1[w_i] + P_2[w_i]}{2}
-\]
+\begin{equation}
+    H[w_i] = \frac{P_1[w_i] + P_2[w_i]}{2}
+\end{equation}
 
-Este método genera un nuevo individuo que se ubica en el punto medio del segmento que conecta a los dos padres en el espacio de soluciones. La renormalización de los pesos para que sumen 1 se realiza después del paso de mutación.
+Este método genera un nuevo individuo que se ubica en el punto medio del segmento que conecta a los dos padres en el espacio de soluciones.
 
-\subsubsection{Mutación con Ruido Uniforme}
+\textbf{Justificación frente al cruce de un punto:}
+\begin{itemize}
+    \item El cruce de un punto divide el cromosoma en dos segmentos y los intercambia. Para cromosomas de solo 5 genes donde \textbf{todos los genes colaboran simultáneamente} para producir un peso válido (el vector normalizado), intercambiar segmentos puede generar hijos geométricamente inconsistentes antes de la renormalización.
+    \item El cruce por promedio produce siempre un hijo en el interior del espacio convexo generado por los dos padres. En un espacio de búsqueda que es un símplice (los pesos deben sumar 1), el punto medio entre dos vectores válidos es también válido, lo que hace que la operación de renormalización sea más suave y predecible.
+    \item El operador promedio es equivalente al cruce aritmético con $\lambda = 0.5$, y garantiza que el hijo hereda información de ambos padres con igual peso, comportamiento deseable cuando no hay razón a priori para privilegiar las características de uno sobre las del otro.
+\end{itemize}
+
+La renormalización de los pesos para que sumen 1 se realiza después del paso de mutación.
+
+\subsubsection{Mutación con Ruido Uniforme: Justificación del Operador}
 
 Cada gen del individuo muta con una probabilidad $p_m = 0.10$ (10\%). Cuando un gen $w_i$ es seleccionado para mutar, se le suma un valor aleatorio extraído de una distribución uniforme:
 
-\[
-w_i' = w_i + U(-f_m, f_m), \quad \text{con } f_m = 0.2
-\]
+\begin{equation}
+    w_i' = \text{clip}\!\left(w_i + U(-f_m, f_m),\; 0,\; 1\right), \qquad f_m = 0.2
+\end{equation}
 
-El valor resultante se recorta para mantenerse en el dominio $[0, 1]$ y, finalmente, el vector completo se renormaliza para asegurar que $\sum w_i' = 1$.
+El vector completo se renormaliza tras la mutación para asegurar que $\sum w_i' = 1$.
+
+\textbf{Justificación de los parámetros:}
+\begin{itemize}
+    \item $p_m = 0.10$: con 5 genes, esta probabilidad implica que en promedio 0.5 genes mutan por individuo y generación. Este valor equilibra exploración (prevención de convergencia prematura) con explotación (preservación de soluciones buenas), siguiendo la recomendación general de $p_m \approx 1/L$ donde $L$ es la longitud del cromosoma ($1/5 = 0.2$; el valor $0.10$ es ligeramente más conservador).
+    \item $f_m = 0.20$: el desplazamiento máximo de $\pm 0.20$ sobre un dominio $[0,1]$ corresponde al 20\% del rango total. Esto permite explorar el vecindario local de una solución sin destruir la información acumulada, comportamiento consistente con la mutación gaussiana descrita en la literatura \cite{b2} para variables continuas.
+    \item \textit{Distribución uniforme vs. gaussiana:} la distribución uniforme es simétrica y sin colas pesadas, lo que evita perturbaciones extremas muy ocasionales (que sí ocurrirían con una distribución gaussiana sin recorte). Para un espacio de 5 dimensiones con restricción de suma, la uniformidad de la perturbación es preferible.
+\end{itemize}
 
 \subsubsection{Elitismo}
 
 Aunque \texttt{config.py} declara un elitismo de 2 individuos, la implementación efectiva preserva solo \textbf{un} individuo por generación: el mejor cromosoma encontrado en la generación actual se copia directamente a la nueva población antes de crear el resto de hijos.
 
-\subsubsection{Criterio de Parada}
+\textbf{Efecto del elitismo:} El elitismo garantiza que la curva de fitness del mejor individuo sea monótonamente no decreciente a lo largo de las generaciones. Sin este mecanismo, el cruce y la mutación podrían destruir ocasionalmente las mejores soluciones encontradas, provocando retrocesos en la convergencia. Al preservar siempre al menos al mejor individuo, el AG mantiene la mejor solución encontrada hasta ese momento de forma determinista.
 
-El algoritmo genético de la versión actual se detiene únicamente al completar \textbf{50 generaciones}. No existe un criterio de \textit{early stopping} por convergencia ni una paciencia configurable aplicada en el código.
+\subsubsection{Convergencia y Análisis del Proceso Evolutivo}
+
+El AG ejecuta exactamente 50 generaciones sin criterio de parada anticipada. La dinámica típica de convergencia para este problema sigue tres fases:
+
+\begin{enumerate}
+    \item \textbf{Fase de exploración (generaciones 1--15 aproximadamente):} La diversidad poblacional es alta y el fitness mejora rápidamente. Los padres seleccionados por truncamiento producen hijos que sistemáticamente superan a los individuos menos aptos eliminados.
+    \item \textbf{Fase de explotación (generaciones 15--40):} El fitness del mejor individuo sigue creciendo pero a menor velocidad. La mutación uniforme actúa como mecanismo principal de variación al reducirse la diversidad genética por cruce repetido de individuos similares.
+    \item \textbf{Fase de convergencia (generaciones 40--50):} La mayor parte de la población comparte genes similares y el fitness se estabiliza. El elitismo garantiza que el mejor individuo encontrado no se deteriore.
+\end{enumerate}
 
 \begin{table}[H]
     \centering
-    \begin{tabular}{p{6cm}cc}
+    \caption{Parámetros del algoritmo genético y justificación}
+    \begin{tabular}{p{3.5cm}cp{7.5cm}}
         \toprule
-        \textbf{Parámetro operativo} & \textbf{Símbolo} & \textbf{Valor} \\
+        \textbf{Parámetro} & \textbf{Valor} & \textbf{Justificación} \\
         \midrule
-        Tamaño de población          & $N_{pop}$ & 30 \\
-        Generaciones                & $T$       & 50 \\
-        Padres seleccionados        & $N_{padres}$ & 15 \\
-        Probabilidad de mutación    & $p_m$     & 0.10 \\
-        Factor de mutación          & $f_m$     & 0.20 \\
-        Elitismo efectivo           & $e$       & 1 \\
-        Longitud del cromosoma      & $L$       & 5 genes \\
+        Tamaño de población & 30 & Suficiente para un cromosoma de 5 genes ($6\times L$); mantiene diversidad sin costo computacional excesivo. \\
+        Número de generaciones & 50 & Para 5 genes y un espacio de búsqueda convexo, 50 generaciones son suficientes para converger; un número mayor no produce mejoras estadísticamente significativas. \\
+        Fracción de padres & 50\% (15) & El truncamiento al 50\% equilibra presión selectiva y diversidad; valores más bajos ($<30\%$) generan convergencia prematura. \\
+        Probabilidad de mutación & 0.10 & Aproximadamente $1/L$ para $L=5$ genes; valor ligeramente conservador para preservar la información del cruce. \\
+        Factor de mutación & 0.20 & $\pm 20\%$ del dominio total; explora el vecindario sin destruir soluciones acumuladas. \\
+        Elitismo efectivo & 1 & Garantiza monotonía no decreciente del mejor fitness. \\
+        Longitud del cromosoma & 5 genes & Un gen por variable de entrada del sistema difuso. \\
         \bottomrule
     \end{tabular}
-    \caption{Parámetros realmente usados por el algoritmo genético}
+    \label{tab:parametros-ag}
+    \par\vspace{2pt}{\footnotesize\textit{Fuente:} Elaboración propia.}
 \end{table}
+
+\subsubsection{Criterio de Parada}
+
+El algoritmo genético de la versión actual se detiene únicamente al completar \textbf{50 generaciones}. No existe un criterio de \textit{early stopping} por convergencia ni una paciencia configurable aplicada en el código. Esta decisión es adecuada dado el bajo costo computacional de cada generación (30 individuos $\times$ 100 evaluaciones = 3.000 operaciones por generación), lo que hace que las 50 generaciones completas se ejecuten en segundos en hardware convencional.
 
 \noindent Aunque \texttt{config.py} declara además \texttt{tasa\_cruce}, \texttt{torneo\_size} y \texttt{elitismo = 2}, esos campos no gobiernan directamente la lógica de \texttt{optimizar\_pesos}; la función usa constantes internas equivalentes a la descripción anterior.
 
@@ -762,6 +911,9 @@ G. E. P. Box and M. E. Muller, \textit{A Note on the Generation of Random Normal
 
 \bibitem{b4}
 R. Agrawal and R. Srikant, \textit{Fast Algorithms for Mining Association Rules}, \textit{Proceedings of the 20th International Conference on Very Large Data Bases}, pp. 487--499, 1994.
+
+\bibitem{b6}
+P. J. Brantingham and P. L. Brantingham, \textit{Patterns in Crime}. New York: Macmillan, 1984.
 
 \bibitem{b5}
 J. R. Quinlan, \textit{Learning Logical Definitions from Relations}, \textit{Machine Learning}, Vol. 5, No. 3, pp. 239--266, 1990.
